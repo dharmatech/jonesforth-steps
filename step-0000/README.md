@@ -75,6 +75,12 @@ Then type:
 run
 ```
 
+If you want preconfigured + auto-run:
+
+```bash
+make debug-script-run
+```
+
 ## Debug with vendored gdb-dashboard
 
 ```bash
@@ -83,6 +89,13 @@ make debug-dashboard
 
 This runs GDB with the project-local dashboard script:
 - `gdb-dashboard.gdb` (copied from `~/.gdbinit`)
+- `debug-dashboard.gdb` (dashboard-specific toggles, e.g. hide Threads)
 - `debug.gdb` (our step breakpoints/displays)
 
 `-nx` is used so user-specific `~/.gdbinit` is ignored and everyone gets the same dashboard behavior from the repo files.
+
+For dashboard + auto-run:
+
+```bash
+make debug-dashboard-run
+```
