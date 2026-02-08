@@ -58,3 +58,31 @@ Expected flow:
 2. `LIT 3` pushes `3`
 3. `ADD` leaves `5` on top of `%esp`
 4. `BYE` exits
+
+## Debug with preloaded script
+
+```bash
+make debug-script
+```
+
+This loads `debug.gdb`, which preconfigures:
+- breakpoints: `_start`, `code_LIT`, `code_ADD`, `code_BYE`
+- displays: `$pc`, `$eax`, `$esi`, `$esp`
+
+Then type:
+
+```gdb
+run
+```
+
+## Debug with vendored gdb-dashboard
+
+```bash
+make debug-dashboard
+```
+
+This runs GDB with the project-local dashboard script:
+- `gdb-dashboard.gdb` (copied from `~/.gdbinit`)
+- `debug.gdb` (our step breakpoints/displays)
+
+`-nx` is used so user-specific `~/.gdbinit` is ignored and everyone gets the same dashboard behavior from the repo files.
