@@ -11,20 +11,20 @@ run: jonesforth
 debug: jonesforth
 	gdb ./jonesforth
 
-debug-script: jonesforth debug.gdb
-	gdb -x debug.gdb ./jonesforth
+debug-script: jonesforth gdb/debug.gdb
+	gdb -x gdb/debug.gdb ./jonesforth
 
-debug-script-run: jonesforth debug.gdb run.gdb
-	gdb -x debug.gdb -x run.gdb ./jonesforth
+debug-script-run: jonesforth gdb/debug.gdb gdb/run.gdb
+	gdb -x gdb/debug.gdb -x gdb/run.gdb ./jonesforth
 
-debug-dashboard: jonesforth gdb-dashboard.gdb debug-dashboard.gdb debug.gdb
-	gdb -nx -x gdb-dashboard.gdb -x debug-dashboard.gdb -x debug.gdb ./jonesforth
+debug-dashboard: jonesforth gdb/gdb-dashboard.gdb gdb/debug-dashboard.gdb gdb/debug.gdb
+	gdb -nx -x gdb/gdb-dashboard.gdb -x gdb/debug-dashboard.gdb -x gdb/debug.gdb ./jonesforth
 
-debug-dashboard-run: jonesforth gdb-dashboard.gdb debug-dashboard.gdb debug.gdb run.gdb
-	gdb -nx -x gdb-dashboard.gdb -x debug-dashboard.gdb -x debug.gdb -x run.gdb ./jonesforth
+debug-dashboard-run: jonesforth gdb/gdb-dashboard.gdb gdb/debug-dashboard.gdb gdb/debug.gdb gdb/run.gdb
+	gdb -nx -x gdb/gdb-dashboard.gdb -x gdb/debug-dashboard.gdb -x gdb/debug.gdb -x gdb/run.gdb ./jonesforth
 
-debug-map: jonesforth memory-map.gdb
-	gdb -q -x memory-map.gdb ./jonesforth
+debug-map: jonesforth gdb/memory-map.gdb
+	gdb -q -x gdb/memory-map.gdb ./jonesforth
 
 clean:
 	rm -f jonesforth *~ core

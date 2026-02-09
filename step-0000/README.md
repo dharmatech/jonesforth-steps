@@ -65,7 +65,7 @@ Expected flow:
 make debug-script
 ```
 
-This loads `debug.gdb`, which preconfigures:
+This loads `gdb/debug.gdb`, which preconfigures:
 - breakpoints: `_start`, `code_LIT`, `code_ADD`, `code_BYE`
 - displays: `$pc`, `$eax`, `$esi`, `$esp`
 
@@ -88,9 +88,9 @@ make debug-dashboard
 ```
 
 This runs GDB with the project-local dashboard script:
-- `gdb-dashboard.gdb` (copied from `~/.gdbinit`)
-- `debug-dashboard.gdb` (dashboard-specific toggles, e.g. hide Threads)
-- `debug.gdb` (our step breakpoints/displays)
+- `gdb/gdb-dashboard.gdb` (copied from `~/.gdbinit`)
+- `gdb/debug-dashboard.gdb` (dashboard-specific toggles, e.g. hide Threads)
+- `gdb/debug.gdb` (our step breakpoints/displays)
 
 `-nx` is used so user-specific `~/.gdbinit` is ignored and everyone gets the same dashboard behavior from the repo files.
 
@@ -106,7 +106,7 @@ make debug-dashboard-run
 make debug-map
 ```
 
-This loads `memory-map.gdb`, which prints:
+This loads `gdb/memory-map.gdb`, which prints:
 - symbol anchors (`LIT`, `DUP`, `ADD`, `cold_start`, etc.)
 - `.text` using `disassemble /r` (instructions + opcode bytes)
 - `.rodata` as 32-bit words
