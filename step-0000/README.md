@@ -117,8 +117,8 @@ This loads `gdb/memory-map.gdb`, which prints:
 make trace
 ```
 
-This runs `gdb/run-alt.gdb` to produce `trace.txt`, then creates
-`trace.norm.txt` with normalized 32-bit hex addresses (7-digit forms are padded
+This runs `gdb/run-alt.gdb` to produce `trace.md`, then creates
+`trace.norm.md` with normalized 32-bit hex addresses (7-digit forms are padded
 to 8 digits).
 
 To normalize an existing trace without rerunning GDB:

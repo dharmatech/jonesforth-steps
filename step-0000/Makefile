@@ -30,10 +30,11 @@ trace: jonesforth gdb/run-alt.gdb
 	gdb -q -x gdb/run-alt.gdb ./jonesforth
 	$(MAKE) trace-norm
 
-trace-norm: trace.txt
-	perl -pe 's/\b0x([0-9a-fA-F]{7})\b/"0x0$$1"/ge' trace.txt > trace.norm.txt
+trace-norm:
+	@test -f trace.md || (echo "trace.md not found; run 'make trace' first." && exit 1)
+	perl -pe 's/\b0x([0-9a-fA-F]{7})\b/"0x0$$1"/ge' trace.md > trace.norm.md
 
 clean:
-	rm -f jonesforth trace.txt trace.norm.txt *~ core
+	rm -f jonesforth trace.txt trace.norm.txt trace.md trace.norm.md *~ core
 
 .PHONY: all run debug debug-script debug-script-run debug-dashboard debug-dashboard-run debug-map trace trace-norm clean

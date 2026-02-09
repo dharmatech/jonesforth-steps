@@ -2,7 +2,7 @@
 # Tips:
 # vim: Use * to highlight symbol under cursor
 
-set logging file trace.txt
+set logging file trace.md
 set logging overwrite on
 set logging enabled on
 
@@ -111,4 +111,3 @@ while $n > 0    &&    $_isvoid($_exitcode)
 end
 
 set logging enabled off
-
