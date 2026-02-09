@@ -53,7 +53,12 @@ code_BYE:
 	mov $__NR_exit,%eax
 	int $0x80
 
-
+/* Assembler entry point. */
+	.globl _start
+_start:
+	cld
+	mov $cold_start,%esi
+	NEXT
 // ------------------------------------------------------------
 	.section .rodata
 	.align 4
@@ -82,12 +87,3 @@ cold_start:
 	.int ADD
 	.int BYE
 // ------------------------------------------------------------
-
-	.text
-/* Assembler entry point. */
-	.globl _start
-_start:
-	cld
-	mov $cold_start,%esi
-	NEXT
-

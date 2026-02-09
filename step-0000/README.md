@@ -99,3 +99,14 @@ For dashboard + auto-run:
 ```bash
 make debug-dashboard-run
 ```
+
+## One-shot memory map
+
+```bash
+make debug-map
+```
+
+This loads `memory-map.gdb`, which prints:
+- symbol anchors (`LIT`, `DUP`, `ADD`, `cold_start`, etc.)
+- `.text` using `disassemble /r` (instructions + opcode bytes)
+- `.rodata` as 32-bit words

@@ -23,7 +23,10 @@ debug-dashboard: jonesforth gdb-dashboard.gdb debug-dashboard.gdb debug.gdb
 debug-dashboard-run: jonesforth gdb-dashboard.gdb debug-dashboard.gdb debug.gdb run.gdb
 	gdb -nx -x gdb-dashboard.gdb -x debug-dashboard.gdb -x debug.gdb -x run.gdb ./jonesforth
 
+debug-map: jonesforth memory-map.gdb
+	gdb -q -x memory-map.gdb ./jonesforth
+
 clean:
 	rm -f jonesforth *~ core
 
-.PHONY: all run debug debug-script debug-script-run debug-dashboard debug-dashboard-run clean
+.PHONY: all run debug debug-script debug-script-run debug-dashboard debug-dashboard-run debug-map clean

@@ -1,0 +1,132 @@
+>>> info files
+Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000-alt/jonesforth".
+Native process:
+        Using the running image of child process 252062.
+        While running this, GDB does not access memory from...
+Local exec file:
+        `/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000-alt/jonesforth', file type elf32-i386.
+        Entry point: 0x8049020
+        0x080480b4 - 0x080480d8 is .note.gnu.build-id
+        0x08049000 - 0x08049029 is .text
+        0x0804a000 - 0x0804a02c is .rodata
+        0xf7ffc0b4 - 0xf7ffc0f4 is .hash in system-supplied DSO at 0xf7ffc000
+        0xf7ffc0f4 - 0xf7ffc140 is .gnu.hash in system-supplied DSO at 0xf7ffc000
+        0xf7ffc140 - 0xf7ffc1f0 is .dynsym in system-supplied DSO at 0xf7ffc000
+        0xf7ffc1f0 - 0xf7ffc2b0 is .dynstr in system-supplied DSO at 0xf7ffc000
+        0xf7ffc2b0 - 0xf7ffc2c6 is .gnu.version in system-supplied DSO at 0xf7ffc000
+        0xf7ffc2c8 - 0xf7ffc31c is .gnu.version_d in system-supplied DSO at 0xf7ffc000
+        0xf7ffc31c - 0xf7ffc3a4 is .dynamic in system-supplied DSO at 0xf7ffc000
+        0xf7ffc3a4 - 0xf7ffc3b0 is .rodata in system-supplied DSO at 0xf7ffc000
+        0xf7ffc3b0 - 0xf7ffc404 is .note in system-supplied DSO at 0xf7ffc000
+        0xf7ffc404 - 0xf7ffc428 is .eh_frame_hdr in system-supplied DSO at 0xf7ffc000
+        0xf7ffc428 - 0xf7ffc534 is .eh_frame in system-supplied DSO at 0xf7ffc000
+        0xf7ffc540 - 0xf7ffd488 is .text in system-supplied DSO at 0xf7ffc000
+        0xf7ffd488 - 0xf7ffd560 is .altinstructions in system-supplied DSO at 0xf7ffc000
+        0xf7ffd560 - 0xf7ffd5a8 is .altinstr_replacement in system-supplied DSO at 0xf7ffc000
+
+>>> set $text_start = 0x08049000
+>>> set $rodata_start = 0x0804a000
+
+>>> x/25i $text_start
+=> 0x08049000 <code_LIT>:        lods   %ds:(%esi),%eax
+   0x08049001 <code_LIT+1>:      push   %eax
+   0x08049002 <code_LIT+2>:      lods   %ds:(%esi),%eax
+   0x08049003 <code_LIT+3>:      jmp    *(%eax)
+   0x08049005 <code_DUP>:        mov    (%esp),%eax
+   0x08049008 <code_DUP+3>:      push   %eax
+   0x08049009 <code_DUP+4>:      lods   %ds:(%esi),%eax
+   0x0804900a <code_DUP+5>:      jmp    *(%eax)
+   0x0804900c <code_DROP>:       pop    %eax
+   0x0804900d <code_DROP+1>:     lods   %ds:(%esi),%eax
+   0x0804900e <code_DROP+2>:     jmp    *(%eax)
+   0x08049010 <code_ADD>:        pop    %eax
+   0x08049011 <code_ADD+1>:      add    %eax,(%esp)
+   0x08049014 <code_ADD+4>:      lods   %ds:(%esi),%eax
+   0x08049015 <code_ADD+5>:      jmp    *(%eax)
+   0x08049017 <code_BYE>:        xor    %ebx,%ebx
+   0x08049019 <code_BYE+2>:      mov    $0x1,%eax
+   0x0804901e <code_BYE+7>:      int    $0x80
+   0x08049020 <_start>:  cld
+   0x08049021 <_start+1>:        mov    $0x804a014,%esi
+   0x08049026 <_start+6>:        lods   %ds:(%esi),%eax
+   0x08049027 <_start+7>:        jmp    *(%eax)
+   0x08049029:   add    %al,(%eax)
+   0x0804902b:   add    %al,(%eax)
+   0x0804902d:   add    %al,(%eax)
+
+>>> x/12xw $rodata_start
+0x0804a000:      0x08049000      0x08049005      0x0804900c      0x08049010
+0x0804a010:      0x08049017      0x0804a000      0x00000002      0x0804a000
+0x0804a020:      0x00000003      0x0804a00c      0x0804a010      0x00000000
+
+>>> x &LIT
+0x0804a000:      0x08049000
+>>> x &DUP
+0x0804a004:      0x08049005
+>>> x &DROP
+0x0804a008:      0x0804900c
+>>> x &ADD
+0x0804a00c:      0x08049010
+>>> x &BYE
+0x0804a010:      0x08049017
+>>> x &cold_start
+0x804a014:      0x0804a000
+
+
+
+
+
+
+
+>>> x/25i $text_start
+
+LABEL         MEMORY LOC    VALUE
+code_LIT      0x08049000    lods   %ds:(%esi),%eax      0xffad50ad
+              0x08049001    push   %eax
+              0x08049002    lods   %ds:(%esi),%eax
+              0x08049003    jmp    *(%eax)
+code_DUP      0x08049005    mov    (%esp),%eax
+              0x08049008    push   %eax
+              0x08049009    lods   %ds:(%esi),%eax
+              0x0804900a    jmp    *(%eax)
+code_DROP     0x0804900c    pop    %eax
+              0x0804900d    lods   %ds:(%esi),%eax
+              0x0804900e    jmp    *(%eax)
+code_ADD      0x08049010    pop    %eax
+              0x08049011    add    %eax,(%esp)
+              0x08049014    lods   %ds:(%esi),%eax
+              0x08049015    jmp    *(%eax)
+code_BYE      0x08049017    xor    %ebx,%ebx
+              0x08049019    mov    $0x1,%eax
+              0x0804901e    int    $0x80
+_start        0x08049020    cld
+              0x08049021    mov    $0x804a014,%esi
+              0x08049026    lods   %ds:(%esi),%eax
+              0x08049027    jmp    *(%eax)
+              0x08049029:   add    %al,(%eax)
+              0x0804902b:   add    %al,(%eax)
+              0x0804902d:   add    %al,(%eax)
+
+
+>>> x/1xw $text_start
+0x8049000 <code_LIT>:   0xffad50ad
+0x8049004 <code_LIT+4>: 0x24048b20
+0x8049008 <code_DUP+3>: 0x20ffad50
+0x804900c <code_DROP>:  0x20ffad58
+0x8049010 <code_ADD>:   0x24040158
+0x8049014 <code_ADD+4>: 0x3120ffad
+0x8049018 <code_BYE+1>: 0x0001b8db
+0x804901c <code_BYE+5>: 0x80cd0000
+0x8049020 <_start>:     0xa014befc
+0x8049024 <_start+4>:   0xffad0804
+0x8049028 <_start+8>:   0x00000020
+0x804902c:      0x00000000
+0x8049030:      0x00000000              
+
+
+
+
+
+x/1xw 0x08049000
+x/1xw 0x08049001
+x/1xw 0x08049002
