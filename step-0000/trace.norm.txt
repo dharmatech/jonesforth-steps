@@ -1,10 +1,10 @@
 # JonesForth Step-0000 GDB Session 
 ## Help 
-### nvim 
+# nvim 
 *    Highlight item under cursor 
-*** Emacs 
+# Emacs 
 M-s h .     Highlight item under cursor 
-* Setup 
+# Setup 
 Breakpoint 1 at 0x08049020: file jonesforth.S, line 59.
 
 Breakpoint 1, _start () at jonesforth.S:59
@@ -16,10 +16,10 @@ Breakpoint 1, _start () at jonesforth.S:59
 4: x/4dw $esp
 0xffffca70:	1	-13321	0	-13244
 
-* `info files` 
+# `info files` 
 Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth".
 Native process:
-	Using the running image of child process 505658.
+	Using the running image of child process 551469.
 	While running this, GDB does not access memory from...
 Local exec file:
 	`/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth', file type elf32-i386.
@@ -43,7 +43,7 @@ Local exec file:
 	0xf7ffd560 - 0xf7ffd5a8 is .altinstr_replacement in system-supplied DSO at 0xf7ffc000
 
 # `info proc mappings` 
-process 505658
+process 551469
 Mapped address spaces:
 
 	Start Addr   End Addr       Size     Offset  Perms   objfile
@@ -283,4 +283,4 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-[Inferior 1 (process 505658) exited normally]
+[Inferior 1 (process 551469) exited normally]

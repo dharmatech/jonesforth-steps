@@ -1,10 +1,10 @@
-* JonesForth Step-0000 GDB Session 
-** Help 
-*** nvim 
+# JonesForth Step-0000 GDB Session 
+## Help 
+# nvim 
 *    Highlight item under cursor 
-*** Emacs 
+# Emacs 
 M-s h .     Highlight item under cursor 
-* Setup 
+# Setup 
 Breakpoint 1 at 0x8049020: file jonesforth.S, line 59.
 
 Breakpoint 1, _start () at jonesforth.S:59
@@ -16,10 +16,10 @@ Breakpoint 1, _start () at jonesforth.S:59
 4: x/4dw $esp
 0xffffca70:	1	-13321	0	-13244
 
-* `info files` 
+# `info files` 
 Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth".
 Native process:
-	Using the running image of child process 519700.
+	Using the running image of child process 551469.
 	While running this, GDB does not access memory from...
 Local exec file:
 	`/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth', file type elf32-i386.
@@ -42,8 +42,8 @@ Local exec file:
 	0xf7ffd488 - 0xf7ffd560 is .altinstructions in system-supplied DSO at 0xf7ffc000
 	0xf7ffd560 - 0xf7ffd5a8 is .altinstr_replacement in system-supplied DSO at 0xf7ffc000
 
-* `info proc mappings` 
-process 519700
+# `info proc mappings` 
+process 551469
 Mapped address spaces:
 
 	Start Addr   End Addr       Size     Offset  Perms   objfile
@@ -52,8 +52,8 @@ Mapped address spaces:
 	0xf7ffc000 0xf7ffe000     0x2000        0x0  r-xp   [vdso]
 	0xfffdc000 0xffffe000    0x22000        0x0  rwxp   [stack]
 
-* Memory Map Visualization 
-** Anchors 
+# Memory Map Visualization 
+## Anchors 
 code_LIT    = 0x08049000
 _start      = 0x08049020
 &LIT        = 0x0804a000
@@ -63,7 +63,7 @@ _start      = 0x08049020
 &BYE        = 0x0804a010
 &cold_start = 0x0804a014
 
-** .text (disassemble with opcode bytes) 
+## .text (disassemble with opcode bytes) 
 Dump of assembler code from 0x8049000 to 0x8049029:
    0x08049000 <code_LIT+0>:	ad	lods   %ds:(%esi),%eax
    0x08049001 <code_LIT+1>:	50	push   %eax
@@ -90,7 +90,7 @@ Dump of assembler code from 0x8049000 to 0x8049029:
    0x08049027 <_start+7>:	6a 00	push   $0x0
 End of assembler dump.
 
-** .rodata 
+## .rodata 
 LIT  = 0x0804a000   0x08049000
 DUP  = 0x0804a004   0x08049005
 DROP = 0x0804a008   0x0804900c
@@ -105,7 +105,7 @@ cold_start = 0x0804a014   0x0804a000
 0x804a024:	0x0804a00c
 0x804a028:	0x0804a010
 
-* Single Stepping 
+# Single Stepping 
 
 61		push $0
 1: x/i $pc
@@ -283,4 +283,4 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-[Inferior 1 (process 519700) exited normally]
+[Inferior 1 (process 551469) exited normally]
