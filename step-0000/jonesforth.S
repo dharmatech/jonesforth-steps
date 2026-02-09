@@ -27,50 +27,27 @@
  *     NEXT
  */
 
-	.section .rodata
-	.align 4
-LIT:
-	.int code_LIT
+// ------------------------------------------------------------
 	.text
 code_LIT:
 	lodsl            // read literal cell following LIT
 	push %eax        // push literal to data stack
 	NEXT
 
-	.section .rodata
-	.align 4
-DUP:
-	.int code_DUP
-	.text
 code_DUP:
 	mov (%esp),%eax
 	push %eax
 	NEXT
 
-	.section .rodata
-	.align 4
-DROP:
-	.int code_DROP
-	.text
 code_DROP:
 	pop %eax
 	NEXT
 
-	.section .rodata
-	.align 4
-ADD:
-	.int code_ADD
-	.text
 code_ADD:
 	pop %eax
 	addl %eax,(%esp)
 	NEXT
 
-	.section .rodata
-	.align 4
-BYE:
-	.int code_BYE
-	.text
 code_BYE:
 	xor %ebx,%ebx        // status = 0
 	mov $__NR_exit,%eax
@@ -82,6 +59,14 @@ _start:
 	cld
 	mov $cold_start,%esi
 	NEXT
+// ------------------------------------------------------------
+	.section .rodata
+	.align 4
+LIT:  .int code_LIT
+DUP:  .int code_DUP	
+DROP: .int code_DROP
+ADD:  .int code_ADD
+BYE:  .int code_BYE
 
 /*
  * Fixed threaded program for step-0000:
@@ -93,8 +78,7 @@ _start:
  *
  * After ADD, top of data stack is 5, visible in gdb before BYE executes.
  */
-	.section .rodata
-	.align 4
+
 cold_start:
 	.int LIT
 	.int 2
@@ -102,3 +86,4 @@ cold_start:
 	.int 3
 	.int ADD
 	.int BYE
+// ------------------------------------------------------------
