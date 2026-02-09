@@ -57,6 +57,12 @@ code_BYE:
 	.globl _start
 _start:
 	cld
+	
+	push $0
+	push $0
+	push $0
+	push $0
+
 	mov $cold_start,%esi
 	NEXT
 // ------------------------------------------------------------
