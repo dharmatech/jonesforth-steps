@@ -110,3 +110,19 @@ This loads `gdb/memory-map.gdb`, which prints:
 - symbol anchors (`LIT`, `DUP`, `ADD`, `cold_start`, etc.)
 - `.text` using `disassemble /r` (instructions + opcode bytes)
 - `.rodata` as 32-bit words
+
+## Generate normalized trace
+
+```bash
+make trace
+```
+
+This runs `gdb/run-alt.gdb` to produce `trace.txt`, then creates
+`trace.norm.txt` with normalized 32-bit hex addresses (7-digit forms are padded
+to 8 digits).
+
+To normalize an existing trace without rerunning GDB:
+
+```bash
+make trace-norm
+```

@@ -32,6 +32,7 @@ disassemble /r $text_start, $text_end
 # x/1xw
 # x/1xw
 
+echo \n
 echo .rodata \n
 
 # printf "&LIT = 0x%08x   0x%08x\n", (unsigned int)&LIT, *(unsigned int*)&LIT
