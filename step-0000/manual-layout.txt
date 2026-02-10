@@ -1,0 +1,66 @@
+
+registers
+
+eax            0x0                 0
+ecx            0x0                 0
+edx            0x0                 0
+ebx            0x0                 0
+esp            0xffffca70          0xffffca70
+ebp            0x0                 0x0
+esi            0x0                 0
+edi            0x0                 0
+eip            0x8049020           0x8049020 <_start>
+eflags         0x202               [ IF ]
+cs             0x23                35
+ss             0x2b                43
+ds             0x2b                43
+es             0x2b                43
+fs             0x0                 0
+gs             0x0                 0
+
+.text
+
+code_LIT   0x08049000 ad               lods   %ds:(%esi),%eax
+           0x08049001 50               push   %eax
+           0x08049002 ad               lods   %ds:(%esi),%eax
+           0x08049003 ff 20            jmp    *(%eax)
+code_DUP   0x08049005 8b 04 24         mov    (%esp),%eax
+           0x08049008 50               push   %eax
+           0x08049009 ad               lods   %ds:(%esi),%eax
+           0x0804900a ff 20            jmp    *(%eax)
+code_DROP  0x0804900c 58               pop    %eax
+           0x0804900d ad               lods   %ds:(%esi),%eax
+           0x0804900e ff 20	           jmp    *(%eax)
+code_ADD   0x08049010 58               pop    %eax
+           0x08049011 01 04 24         add    %eax,(%esp)
+           0x08049014 ad               lods   %ds:(%esi),%eax
+           0x08049015 ff 20            jmp    *(%eax)
+code_BYE   0x08049017 31 db            xor    %ebx,%ebx
+           0x08049019 b8 01 00 00 00   mov    $0x1,%eax
+           0x0804901e cd 80            int    $0x80
+_start     0x08049020 fc               cld    
+           0x08049021 6a 00            push   $0x0
+           0x08049023 6a 00            push   $0x0
+           0x08049025 6a 00            push   $0x0
+           0x08049027 6a 00            push   $0x0
+
+.rodata
+
+LIT        0x0804a000 0x08049000    code_LIT
+DUP        0x0804a004 0x08049005    code_DUP
+DROP       0x0804a008 0x0804900c    code_DROP
+ADD        0x0804a00c 0x08049010    code_ADD
+BYE        0x0804a010 0x08049017    code_BYE
+cold_start 0x0804a014 0x0804a000    LIT
+           0x0804a018 0x00000002
+           0x0804a01c 0x0804a000    LIT
+           0x0804a020 0x00000003
+           0x0804a024 0x0804a00c    ADD
+           0x0804a028 0x0804a010    BYE
+
+stack
+
+0xffffca70 0x00000001
+0xffffca74 0xffffcbf7
+0xffffca78 0x00000000
+0xffffca7c 0xffffcc44

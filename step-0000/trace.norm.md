@@ -26,7 +26,7 @@ Breakpoint 1, _start () at jonesforth.S:59
 ``` 
 Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth".
 Native process:
-	Using the running image of child process 556217.
+	Using the running image of child process 673217.
 	While running this, GDB does not access memory from...
 Local exec file:
 	`/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth', file type elf32-i386.
@@ -52,7 +52,7 @@ Local exec file:
 
 # `info proc mappings` 
 ``` 
-process 556217
+process 673217
 Mapped address spaces:
 
 	Start Addr   End Addr       Size     Offset  Perms   objfile
@@ -77,7 +77,7 @@ _start      = 0x08049020
 
 ## .text (disassemble with opcode bytes) 
 ``` 
-Dump of assembler code from 0x08049000 to 0x08049029:
+Dump of assembler code from 0x08049000 to 0x08049032:
    0x08049000 <code_LIT+0>:	ad	lods   %ds:(%esi),%eax
    0x08049001 <code_LIT+1>:	50	push   %eax
    0x08049002 <code_LIT+2>:	ad	lods   %ds:(%esi),%eax
@@ -101,6 +101,10 @@ Dump of assembler code from 0x08049000 to 0x08049029:
    0x08049023 <_start+3>:	6a 00	push   $0x0
    0x08049025 <_start+5>:	6a 00	push   $0x0
    0x08049027 <_start+7>:	6a 00	push   $0x0
+   0x08049029 <_start+9>:	be 14 a0 04 08	mov    $0x0804a014,%esi
+   0x0804902e <_start+14>:	ad	lods   %ds:(%esi),%eax
+   0x0804902f <_start+15>:	ff 20	jmp    *(%eax)
+   0x08049031:	00 00	add    %al,(%eax)
 End of assembler dump.
 ``` 
 
@@ -300,5 +304,5 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-[Inferior 1 (process 556217) exited normally]
+[Inferior 1 (process 673217) exited normally]
 ``` 

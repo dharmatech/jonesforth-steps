@@ -56,7 +56,7 @@ echo \n
 echo # Memory Map Visualization \n
 
 set $text_start   = (unsigned int)code_LIT
-set $text_end     = (unsigned int)_start + 9
+set $text_end     = (unsigned int)_start + 18
 set $rodata_start = (unsigned int)&LIT
 set $rodata_end   = (unsigned int)&cold_start + 24
 set $rodata_words = ($rodata_end - $rodata_start) / 4
