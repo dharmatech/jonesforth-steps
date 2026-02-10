@@ -48,3 +48,37 @@ Accepted line formats:
 Overrides apply to:
 - row labels (address column)
 - pointer labels (value column)
+
+## GDB Python Extension (Generic)
+
+Load custom GDB commands:
+
+```gdb
+(gdb) source python-gdb-ui/gdb_jonesforth_ui.py
+```
+
+Generic commands:
+
+- `ui-text [start_expr] [end_expr]`
+- `ui-words [start_expr] [end_expr] [--labels FILE] [--word-size N]`
+
+Defaults:
+
+- `ui-text` uses full `.text` section if no range is provided.
+- `ui-words` uses full `.rodata` section if no range is provided.
+- `ui-words` default word size is pointer size (`sizeof(void*)`).
+
+Compatibility aliases:
+
+- `jf-text` -> `ui-text`
+- `jf-rodata` -> `ui-words`
+
+Examples:
+
+```gdb
+(gdb) file step-0000/jonesforth
+(gdb) source python-gdb-ui/gdb_jonesforth_ui.py
+(gdb) ui-text
+(gdb) ui-words --word-size 4
+(gdb) ui-words '&LIT' '((unsigned int)&cold_start)+24' --word-size 4 --labels python-gdb-ui/labels.example.txt
+```

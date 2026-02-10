@@ -10,10 +10,10 @@ M-s h .     Highlight item under cursor
 ``` 
 # Setup 
 ``` 
-Breakpoint 1 at 0x8049020: file jonesforth.S, line 59.
+Breakpoint 1 at 0x8049020: file jonesforth.S, line 60.
 
-Breakpoint 1, _start () at jonesforth.S:59
-59		cld
+Breakpoint 1, _start () at jonesforth.S:60
+60		cld
 1: x/i $pc
 => 0x8049020 <_start>:	cld    
 2: /x $eax = 0x0
@@ -26,7 +26,7 @@ Breakpoint 1, _start () at jonesforth.S:59
 ``` 
 Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth".
 Native process:
-	Using the running image of child process 673217.
+	Using the running image of child process 960438.
 	While running this, GDB does not access memory from...
 Local exec file:
 	`/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-0000/jonesforth', file type elf32-i386.
@@ -52,7 +52,7 @@ Local exec file:
 
 # `info proc mappings` 
 ``` 
-process 673217
+process 960438
 Mapped address spaces:
 
 	Start Addr   End Addr       Size     Offset  Perms   objfile
@@ -63,17 +63,6 @@ Mapped address spaces:
 ``` 
 
 # Memory Map Visualization 
-## Anchors 
-``` 
-code_LIT    = 0x08049000
-_start      = 0x08049020
-&LIT        = 0x0804a000
-&DUP        = 0x0804a004
-&DROP       = 0x0804a008
-&ADD        = 0x0804a00c
-&BYE        = 0x0804a010
-&cold_start = 0x0804a014
-``` 
 
 ## .text (disassemble with opcode bytes) 
 ``` 
@@ -110,13 +99,15 @@ End of assembler dump.
 
 ## .rodata 
 ``` 
-LIT  = 0x0804a000   0x08049000
-DUP  = 0x0804a004   0x08049005
-DROP = 0x0804a008   0x0804900c
-ADD  = 0x0804a00c   0x08049010
-BYE  = 0x0804a010   0x08049017
+LIT   0x0804a000   0x08049000
+DUP   0x0804a004   0x08049005
+DROP  0x0804a008   0x0804900c
+ADD   0x0804a00c   0x08049010
+BYE   0x0804a010   0x08049017
 
-cold_start = 0x0804a014   0x0804a000
+cold_start 0x0804a014   0x0804a000
+           0x0804a018   0x00000002
+
 0x804a014:	0x0804a000
 0x804a018:	0x00000002
 0x804a01c:	0x0804a000
@@ -128,7 +119,7 @@ cold_start = 0x0804a014   0x0804a000
 # Single Stepping 
 ``` 
 
-61		push $0
+62		push $0
 1: x/i $pc
 => 0x8049021 <_start+1>:	push   $0x0
 2: /x $eax = 0x0
@@ -136,7 +127,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca70:	1	-13321	0	-13244
 
-62		push $0
+63		push $0
 1: x/i $pc
 => 0x8049023 <_start+3>:	push   $0x0
 2: /x $eax = 0x0
@@ -144,7 +135,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca6c:	0	1	-13321	0
 
-63		push $0
+64		push $0
 1: x/i $pc
 => 0x8049025 <_start+5>:	push   $0x0
 2: /x $eax = 0x0
@@ -152,7 +143,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca68:	0	0	1	-13321
 
-64		push $0
+65		push $0
 1: x/i $pc
 => 0x8049027 <_start+7>:	push   $0x0
 2: /x $eax = 0x0
@@ -160,7 +151,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca64:	0	0	0	1
 
-66		mov $cold_start,%esi
+67		mov $cold_start,%esi
 1: x/i $pc
 => 0x8049029 <_start+9>:	mov    $0x804a014,%esi
 2: /x $eax = 0x0
@@ -168,7 +159,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca60:	0	0	0	0
 
-67		NEXT
+68		NEXT
 1: x/i $pc
 => 0x804902e <_start+14>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x0
@@ -176,7 +167,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca60:	0	0	0	0
 
-0x0804902f	67		NEXT
+0x0804902f	68		NEXT
 1: x/i $pc
 => 0x804902f <_start+15>:	jmp    *(%eax)
 2: /x $eax = 0x804a000
@@ -184,7 +175,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca60:	0	0	0	0
 
-33		lodsl            // read literal cell following LIT
+34		lodsl            // read literal cell following LIT
 1: x/i $pc
 => 0x8049000 <code_LIT>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x804a000
@@ -192,7 +183,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca60:	0	0	0	0
 
-34		push %eax        // push literal to data stack
+35		push %eax        // push literal to data stack
 1: x/i $pc
 => 0x8049001 <code_LIT+1>:	push   %eax
 2: /x $eax = 0x2
@@ -200,7 +191,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca60:	0	0	0	0
 
-35		NEXT
+36		NEXT
 1: x/i $pc
 => 0x8049002 <code_LIT+2>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x2
@@ -208,7 +199,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	2	0	0	0
 
-0x08049003	35		NEXT
+0x08049003	36		NEXT
 1: x/i $pc
 => 0x8049003 <code_LIT+3>:	jmp    *(%eax)
 2: /x $eax = 0x804a000
@@ -216,7 +207,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	2	0	0	0
 
-33		lodsl            // read literal cell following LIT
+34		lodsl            // read literal cell following LIT
 1: x/i $pc
 => 0x8049000 <code_LIT>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x804a000
@@ -224,7 +215,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	2	0	0	0
 
-34		push %eax        // push literal to data stack
+35		push %eax        // push literal to data stack
 1: x/i $pc
 => 0x8049001 <code_LIT+1>:	push   %eax
 2: /x $eax = 0x3
@@ -232,7 +223,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	2	0	0	0
 
-35		NEXT
+36		NEXT
 1: x/i $pc
 => 0x8049002 <code_LIT+2>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x3
@@ -240,7 +231,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca58:	3	2	0	0
 
-0x08049003	35		NEXT
+0x08049003	36		NEXT
 1: x/i $pc
 => 0x8049003 <code_LIT+3>:	jmp    *(%eax)
 2: /x $eax = 0x804a00c
@@ -248,7 +239,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca58:	3	2	0	0
 
-47		pop %eax
+48		pop %eax
 1: x/i $pc
 => 0x8049010 <code_ADD>:	pop    %eax
 2: /x $eax = 0x804a00c
@@ -256,7 +247,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca58:	3	2	0	0
 
-48		addl %eax,(%esp)
+49		addl %eax,(%esp)
 1: x/i $pc
 => 0x8049011 <code_ADD+1>:	add    %eax,(%esp)
 2: /x $eax = 0x3
@@ -264,7 +255,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	2	0	0	0
 
-49		NEXT
+50		NEXT
 1: x/i $pc
 => 0x8049014 <code_ADD+4>:	lods   %ds:(%esi),%eax
 2: /x $eax = 0x3
@@ -272,7 +263,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-0x08049015	49		NEXT
+0x08049015	50		NEXT
 1: x/i $pc
 => 0x8049015 <code_ADD+5>:	jmp    *(%eax)
 2: /x $eax = 0x804a010
@@ -280,7 +271,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-52		xor %ebx,%ebx        // status = 0
+53		xor %ebx,%ebx        // status = 0
 1: x/i $pc
 => 0x8049017 <code_BYE>:	xor    %ebx,%ebx
 2: /x $eax = 0x804a010
@@ -288,7 +279,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-53		mov $__NR_exit,%eax
+54		mov $__NR_exit,%eax
 1: x/i $pc
 => 0x8049019 <code_BYE+2>:	mov    $0x1,%eax
 2: /x $eax = 0x804a010
@@ -296,7 +287,7 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-54		int $0x80
+55		int $0x80
 1: x/i $pc
 => 0x804901e <code_BYE+7>:	int    $0x80
 2: /x $eax = 0x1
@@ -304,5 +295,5 @@ cold_start = 0x0804a014   0x0804a000
 4: x/4dw $esp
 0xffffca5c:	5	0	0	0
 
-[Inferior 1 (process 673217) exited normally]
+[Inferior 1 (process 960438) exited normally]
 ``` 

@@ -13,7 +13,8 @@
 
 /* NEXT: fetch next cell pointed by %esi, then jump via its codeword. */
 	.macro NEXT
-	lodsl
+	lodsl          // fetch cell pointed by %esi into %eax
+	               // and advance %esi by 4
 	jmp *(%eax)
 	.endm
 
