@@ -1,0 +1,15 @@
+# Address label overrides for --labels
+# Format: 0xADDR LABEL  OR  0xADDR=LABEL
+
+0x0804a000 LIT
+0x0804a004 DUP
+0x0804a008 DROP
+0x0804a00c ADD
+0x0804a010 BYE
+0x0804a014 cold_start
+
+0x08049000 code_LIT
+0x08049005 code_DUP
+0x0804900c code_DROP
+0x08049010 code_ADD
+0x08049017 code_BYE
