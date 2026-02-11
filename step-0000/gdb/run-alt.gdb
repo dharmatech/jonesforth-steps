@@ -27,10 +27,10 @@ echo # Setup \n
 echo ``` \n
 break _start
 
-display/i $pc
-display/x   $eax
-display/x   $esi
-display/4dw $esp
+# display/i $pc
+# display/x   $eax
+# display/x   $esi
+# display/4dw $esp
 
 run
 
@@ -77,11 +77,11 @@ set $rodata_words = ($rodata_end - $rodata_start) / 4
 # echo ``` \n
 
 echo \n
-echo ## .text (disassemble with opcode bytes) \n
+# echo ## .text (disassemble with opcode bytes) \n
 
-echo ``` \n
-disassemble /r $text_start, $text_end
-echo ``` \n
+# echo ``` \n
+# disassemble /r $text_start, $text_end
+# echo ``` \n
 
 # echo \n-- .rodata (32-bit words) --\n
 # eval "x/%dxw $rodata_start", $rodata_words
@@ -97,32 +97,37 @@ echo ``` \n
 # x/1xw
 
 echo \n
-echo ## .rodata \n
+# echo ## .rodata \n
 
 # printf "&LIT = 0x%08x   0x%08x\n", (unsigned int)&LIT, *(unsigned int*)&LIT
 
-echo ``` \n
-printf "LIT   0x%08x   0x%08x\n", &LIT,  (unsigned int)LIT
-printf "DUP   0x%08x   0x%08x\n", &DUP,  (unsigned int)DUP
-printf "DROP  0x%08x   0x%08x\n", &DROP, (unsigned int)DROP
-printf "ADD   0x%08x   0x%08x\n", &ADD,  (unsigned int)ADD
-printf "BYE   0x%08x   0x%08x\n", &BYE,  (unsigned int)BYE
+# echo ``` \n
+# printf "LIT   0x%08x   0x%08x\n", &LIT,  (unsigned int)LIT
+# printf "DUP   0x%08x   0x%08x\n", &DUP,  (unsigned int)DUP
+# printf "DROP  0x%08x   0x%08x\n", &DROP, (unsigned int)DROP
+# printf "ADD   0x%08x   0x%08x\n", &ADD,  (unsigned int)ADD
+# printf "BYE   0x%08x   0x%08x\n", &BYE,  (unsigned int)BYE
 
 echo \n
-printf "cold_start 0x%08x   0x%08x\n", &cold_start,  *(unsigned int*)&cold_start
 
+# printf "cold_start 0x%08x   0x%08x\n", &cold_start,  *(unsigned int*)&cold_start
 # printf "           0x%08x   0x%08x\n", (int)&cold_start + 4,  *(unsigned int*)&cold_start
-
-printf "           0x%08x   0x%08x\n", (int)&cold_start + 4,  *(unsigned int*) ((int)&cold_start + 4)
-
+# printf "           0x%08x   0x%08x\n", (int)&cold_start + 4,  *(unsigned int*) ((int)&cold_start + 4)
 echo \n
-x/1xw &cold_start
-x/1xw 
-x/1xw
-x/1xw
-x/1xw
-x/1xw
+
+# x/1xw &cold_start
+# x/1xw 
+# x/1xw
+# x/1xw
+# x/1xw
+# x/1xw
 echo ``` \n
+
+source ../python-gdb-ui/gdb_program_ui.py
+
+# ui-text
+# ui-rodata
+ui-sections
 
 # printf "&LIT = 0x%08x   0x%08x\n", LIT, *(unsigned int*)&LIT
 
@@ -132,8 +137,22 @@ echo # Single Stepping \n
 echo ``` \n
 set $n = 1000
 while $n > 0    &&    $_isvoid($_exitcode)
+    # echo \n
+
+    echo --------------------\n
+    stepi    
+
     echo \n
-    stepi
+
+    if $_isvoid($_exitcode)
+        echo $pc \ 
+        x/i   $pc
+        ui-reg eax
+        ui-reg esi
+        echo $esp \ 
+        x/4dw $esp
+    end
+           
     set $n = $n - 1
 end
 echo ``` \n

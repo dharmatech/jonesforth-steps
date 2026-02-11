@@ -2,11 +2,12 @@
 
 Generic commands:
 - ui-text [start_expr] [end_expr]
-- ui-words [start_expr] [end_expr] [--labels FILE] [--word-size N]
+- ui-rodata [start_expr] [end_expr] [--labels FILE] [--word-size N]
+- ui-sections [--labels FILE] [--word-size N]
+- ui-reg <reg> [reg ...]
 
 Compatibility aliases:
-- jf-text ...   (alias of ui-text)
-- jf-rodata ... (alias of ui-words)
+- ui-words ...  (alias of ui-rodata)
 """
 
 from __future__ import annotations
@@ -85,6 +86,13 @@ def symbol_name_at(addr: int, exact: bool = True) -> str:
         return name.strip()
 
     return base
+
+
+def symbol_desc_at(addr: int) -> str:
+    info = gdb.execute(f"info symbol 0x{addr:x}", to_string=True).strip()
+    if not info or info.startswith("No symbol matches"):
+        return ""
+    return info.split(" in section", 1)[0].strip()
 
 
 def load_label_overrides(path: str | None) -> dict[int, str]:
@@ -181,6 +189,34 @@ def render_words(rows: list[WordRow]) -> str:
     return "\n".join(lines)
 
 
+def render_text_with_widths(
+    rows: list[TextRow], label_w: int, addr_w: int, data_w: int
+) -> str:
+    lines: list[str] = []
+    for row in rows:
+        lines.append(
+            f"{row.label:<{label_w}}  "
+            f"{row.address:<{addr_w}} "
+            f"{row.byte_values:<{data_w}} "
+            f"{row.instruction}"
+        )
+    return "\n".join(lines)
+
+
+def render_words_with_widths(
+    rows: list[WordRow], label_w: int, addr_w: int, data_w: int
+) -> str:
+    lines: list[str] = []
+    for row in rows:
+        lines.append(
+            f"{row.label:<{label_w}}  "
+            f"{row.address:<{addr_w}} "
+            f"{row.value:<{data_w}}"
+            f"  {row.points_to}".rstrip()
+        )
+    return "\n".join(lines)
+
+
 def read_words(start_addr: int, end_addr: int, word_size: int) -> list[tuple[int, int]]:
     if end_addr <= start_addr:
         raise gdb.GdbError("end address must be greater than start address")
@@ -234,12 +270,111 @@ def parse_words_args(argv: list[str]) -> tuple[str | None, str | None, str | Non
 
     if len(positional) > 2:
         raise gdb.GdbError(
-            "Usage: ui-words [start_expr] [end_expr] [--labels FILE] [--word-size N]"
+            "Usage: ui-rodata [start_expr] [end_expr] [--labels FILE] [--word-size N]"
         )
 
     start_expr = positional[0] if len(positional) >= 1 else None
     end_expr = positional[1] if len(positional) >= 2 else None
     return start_expr, end_expr, labels_file, word_size
+
+
+def parse_sections_args(argv: list[str]) -> tuple[str | None, int | None]:
+    labels_file: str | None = None
+    word_size: int | None = None
+
+    i = 0
+    while i < len(argv):
+        token = argv[i]
+        if token == "--labels":
+            if i + 1 >= len(argv):
+                raise gdb.GdbError("--labels requires a file path")
+            labels_file = argv[i + 1]
+            i += 2
+            continue
+        if token == "--word-size":
+            if i + 1 >= len(argv):
+                raise gdb.GdbError("--word-size requires a number")
+            try:
+                word_size = int(argv[i + 1], 0)
+            except ValueError as exc:
+                raise gdb.GdbError(f"Invalid --word-size: {argv[i + 1]}") from exc
+            i += 2
+            continue
+
+        raise gdb.GdbError("Usage: ui-sections [--labels FILE] [--word-size N]")
+
+    return labels_file, word_size
+
+
+def get_text_rows(start_expr: str | None, end_expr: str | None) -> list[TextRow]:
+    if start_expr is None:
+        bounds = section_bounds(".text")
+        if not bounds:
+            raise gdb.GdbError("Could not find .text section; pass start/end explicitly")
+        start_addr, _ = bounds
+    else:
+        start_addr = eval_uint(start_expr)
+
+    if end_expr is None:
+        bounds = section_bounds(".text")
+        if not bounds:
+            raise gdb.GdbError("Could not find .text section; pass start/end explicitly")
+        _, sec_end = bounds
+        end_addr = sec_end - 1
+    else:
+        end_addr = eval_uint(end_expr)
+
+    if end_addr <= start_addr:
+        raise gdb.GdbError("text end must be greater than text start")
+
+    gdb.execute(f"set $ui_text_start=(unsigned long long){start_addr}")
+    gdb.execute(f"set $ui_text_end=(unsigned long long){end_addr}")
+    disasm = gdb.execute("disassemble /r $ui_text_start,$ui_text_end", to_string=True)
+
+    rows = parse_text_rows(disasm)
+    if not rows:
+        raise gdb.GdbError("No disassembly rows parsed from gdb output")
+    return rows
+
+
+def get_rodata_rows(
+    start_expr: str | None,
+    end_expr: str | None,
+    labels_file: str | None,
+    word_size_arg: int | None,
+) -> list[WordRow]:
+    if start_expr is None or end_expr is None:
+        bounds = section_bounds(".rodata")
+        if not bounds:
+            raise gdb.GdbError("Could not find .rodata section; pass start/end explicitly")
+        default_start, default_end = bounds
+        start_addr = default_start if start_expr is None else eval_uint(start_expr)
+        end_addr = default_end if end_expr is None else eval_uint(end_expr)
+    else:
+        start_addr = eval_uint(start_expr)
+        end_addr = eval_uint(end_expr)
+
+    word_size = word_size_arg if word_size_arg is not None else pointer_size_bytes()
+    words = read_words(start_addr, end_addr, word_size)
+    if not words:
+        raise gdb.GdbError("No words found")
+
+    overrides = load_label_overrides(labels_file)
+    rows: list[WordRow] = []
+
+    for addr, value in words:
+        row_label = overrides.get(addr) or symbol_name_at(addr, exact=True)
+        points_to = overrides.get(value) or symbol_name_at(value, exact=True)
+        rows.append(
+            WordRow(
+                label=row_label,
+                address=format_hex(addr, pointer_size_bytes()),
+                value=format_hex(value, word_size),
+                points_to=points_to,
+            )
+        )
+
+    return rows
 
 
 class UiTextCommand(gdb.Command):
@@ -252,40 +387,15 @@ class UiTextCommand(gdb.Command):
         if len(argv) > 2:
             raise gdb.GdbError("Usage: ui-text [start_expr] [end_expr]")
 
-        if len(argv) >= 1:
-            start_addr = eval_uint(argv[0])
-        else:
-            bounds = section_bounds(".text")
-            if not bounds:
-                raise gdb.GdbError("Could not find .text section; pass start/end explicitly")
-            start_addr, _ = bounds
-
-        if len(argv) >= 2:
-            end_addr = eval_uint(argv[1])
-        else:
-            bounds = section_bounds(".text")
-            if not bounds:
-                raise gdb.GdbError("Could not find .text section; pass start/end explicitly")
-            _, sec_end = bounds
-            end_addr = sec_end - 1
-
-        if end_addr <= start_addr:
-            raise gdb.GdbError("text end must be greater than text start")
-
-        gdb.execute(f"set $ui_text_start=(unsigned long long){start_addr}")
-        gdb.execute(f"set $ui_text_end=(unsigned long long){end_addr}")
-        disasm = gdb.execute("disassemble /r $ui_text_start,$ui_text_end", to_string=True)
-
-        rows = parse_text_rows(disasm)
-        if not rows:
-            raise gdb.GdbError("No disassembly rows parsed from gdb output")
-
+        start_expr = argv[0] if len(argv) >= 1 else None
+        end_expr = argv[1] if len(argv) >= 2 else None
+        rows = get_text_rows(start_expr, end_expr)
         gdb.write(render_text(rows) + "\n")
 
 
 class UiWordsCommand(gdb.Command):
     def __init__(self) -> None:
-        super().__init__("ui-words", gdb.COMMAND_DATA)
+        super().__init__("ui-rodata", gdb.COMMAND_DATA)
 
     def invoke(self, arg: str, from_tty: bool) -> None:
         _ = from_tty
@@ -293,63 +403,87 @@ class UiWordsCommand(gdb.Command):
             gdb.string_to_argv(arg)
         )
 
-        if start_expr is None or end_expr is None:
-            bounds = section_bounds(".rodata")
-            if not bounds:
-                raise gdb.GdbError(
-                    "Could not find .rodata section; pass start/end explicitly"
-                )
-            default_start, default_end = bounds
-            start_addr = default_start if start_expr is None else eval_uint(start_expr)
-            end_addr = default_end if end_expr is None else eval_uint(end_expr)
-        else:
-            start_addr = eval_uint(start_expr)
-            end_addr = eval_uint(end_expr)
-
-        word_size = word_size_arg if word_size_arg is not None else pointer_size_bytes()
-        words = read_words(start_addr, end_addr, word_size)
-        if not words:
-            raise gdb.GdbError("No words found")
-
-        overrides = load_label_overrides(labels_file)
-        rows: list[WordRow] = []
-
-        for addr, value in words:
-            row_label = overrides.get(addr) or symbol_name_at(addr, exact=True)
-            points_to = overrides.get(value) or symbol_name_at(value, exact=True)
-            rows.append(
-                WordRow(
-                    label=row_label,
-                    address=format_hex(addr, pointer_size_bytes()),
-                    value=format_hex(value, word_size),
-                    points_to=points_to,
-                )
-            )
-
+        rows = get_rodata_rows(start_expr, end_expr, labels_file, word_size_arg)
         gdb.write(render_words(rows) + "\n")
 
 
-class AliasTextCommand(gdb.Command):
+class UiSectionsCommand(gdb.Command):
     def __init__(self) -> None:
-        super().__init__("jf-text", gdb.COMMAND_DATA)
+        super().__init__("ui-sections", gdb.COMMAND_DATA)
 
     def invoke(self, arg: str, from_tty: bool) -> None:
         _ = from_tty
-        gdb.execute(f"ui-text {arg}")
+        labels_file, word_size = parse_sections_args(gdb.string_to_argv(arg))
+        text_rows = get_text_rows(None, None)
+        rodata_rows = get_rodata_rows(None, None, labels_file, word_size)
+
+        label_w = max(
+            max(len(r.label) for r in text_rows),
+            max(len(r.label) for r in rodata_rows),
+        )
+        addr_w = max(
+            max(len(r.address) for r in text_rows),
+            max(len(r.address) for r in rodata_rows),
+        )
+        data_w = max(
+            max(len(r.byte_values) for r in text_rows),
+            max(len(r.value) for r in rodata_rows),
+        )
+
+        out_parts = [
+            ".text",
+            render_text_with_widths(text_rows, label_w, addr_w, data_w),
+            "",
+            ".rodata",
+            render_words_with_widths(rodata_rows, label_w, addr_w, data_w),
+        ]
+        gdb.write("\n".join(out_parts) + "\n")
 
 
-class AliasRodataCommand(gdb.Command):
+class UiRegCommand(gdb.Command):
     def __init__(self) -> None:
-        super().__init__("jf-rodata", gdb.COMMAND_DATA)
+        super().__init__("ui-reg", gdb.COMMAND_DATA)
 
     def invoke(self, arg: str, from_tty: bool) -> None:
         _ = from_tty
-        gdb.execute(f"ui-words {arg}")
+        argv = gdb.string_to_argv(arg)
+        if not argv:
+            raise gdb.GdbError("Usage: ui-reg <reg> [reg ...]")
+
+        ptr_w = pointer_size_bytes()
+        rows: list[tuple[str, str, str]] = []
+
+        for reg in argv:
+            reg_name = reg if reg.startswith("$") else f"${reg}"
+            value = eval_uint(reg_name)
+            value_s = format_hex(value, ptr_w)
+            label = symbol_desc_at(value)
+            rows.append((reg_name, value_s, label))
+
+        reg_w = max(len(r[0]) for r in rows)
+        val_w = max(len(r[1]) for r in rows)
+
+        lines: list[str] = []
+        for reg_name, value_s, label in rows:
+            line = f"{reg_name:<{reg_w}} {value_s:<{val_w}}"
+            if label:
+                line += f"  {label}"
+            lines.append(line)
+
+        gdb.write("\n".join(lines) + "\n")
+
+
+class AliasUiWordsCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("ui-words", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = from_tty
+        gdb.execute(f"ui-rodata {arg}")
 
 
 UiTextCommand()
 UiWordsCommand()
-AliasTextCommand()
-AliasRodataCommand()
-
-gdb.write("Loaded commands: ui-text, ui-words (aliases: jf-text, jf-rodata)\n")
+UiSectionsCommand()
+UiRegCommand()
+AliasUiWordsCommand()

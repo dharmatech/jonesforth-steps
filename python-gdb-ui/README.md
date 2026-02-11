@@ -54,31 +54,37 @@ Overrides apply to:
 Load custom GDB commands:
 
 ```gdb
-(gdb) source python-gdb-ui/gdb_jonesforth_ui.py
+(gdb) source python-gdb-ui/gdb_program_ui.py
 ```
 
 Generic commands:
 
 - `ui-text [start_expr] [end_expr]`
-- `ui-words [start_expr] [end_expr] [--labels FILE] [--word-size N]`
+- `ui-rodata [start_expr] [end_expr] [--labels FILE] [--word-size N]`
+- `ui-sections [--labels FILE] [--word-size N]`
+- `ui-reg <reg> [reg ...]`
 
 Defaults:
 
 - `ui-text` uses full `.text` section if no range is provided.
-- `ui-words` uses full `.rodata` section if no range is provided.
-- `ui-words` default word size is pointer size (`sizeof(void*)`).
+- `ui-rodata` uses full `.rodata` section if no range is provided.
+- `ui-rodata` default word size is pointer size (`sizeof(void*)`).
+- `ui-sections` prints `.text` and `.rodata` together with shared column alignment.
+- `ui-reg` prints register values and appends symbol labels when values resolve to symbols.
 
 Compatibility aliases:
 
-- `jf-text` -> `ui-text`
-- `jf-rodata` -> `ui-words`
+- `ui-words` -> `ui-rodata`
 
 Examples:
 
 ```gdb
 (gdb) file step-0000/jonesforth
-(gdb) source python-gdb-ui/gdb_jonesforth_ui.py
+(gdb) source python-gdb-ui/gdb_program_ui.py
 (gdb) ui-text
-(gdb) ui-words --word-size 4
-(gdb) ui-words '&LIT' '((unsigned int)&cold_start)+24' --word-size 4 --labels python-gdb-ui/labels.example.txt
+(gdb) ui-rodata --word-size 4
+(gdb) ui-sections --word-size 4
+(gdb) starti
+(gdb) ui-reg eip esi eax
+(gdb) ui-rodata '&LIT' '((unsigned int)&cold_start)+24' --word-size 4 --labels python-gdb-ui/labels.example.txt
 ```
