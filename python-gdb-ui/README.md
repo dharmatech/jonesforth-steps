@@ -61,15 +61,19 @@ Generic commands:
 
 - `ui-text [start_expr] [end_expr]`
 - `ui-rodata [start_expr] [end_expr] [--labels FILE] [--word-size N]`
-- `ui-sections [--labels FILE] [--word-size N]`
+- `ui-data [start_expr] [end_expr] [--labels FILE] [--word-size N]`
+- `ui-sections [--labels FILE] [--word-size N] [--md]`
 - `ui-reg <reg> [reg ...]`
 
 Defaults:
 
 - `ui-text` uses full `.text` section if no range is provided.
 - `ui-rodata` uses full `.rodata` section if no range is provided.
+- `ui-data` uses full `.data` section if no range is provided.
 - `ui-rodata` default word size is pointer size (`sizeof(void*)`).
-- `ui-sections` prints `.text` and `.rodata` together with shared column alignment.
+- `ui-sections` prints `.text`, `.rodata`, and `.data` together with shared column alignment.
+- In `ui-sections`, missing `.rodata` or `.data` is shown as `(section not found)`.
+- `ui-sections --md` emits markdown headings + fenced code blocks for easy folding in markdown files.
 - `ui-reg` prints register values and appends symbol labels when values resolve to symbols.
 
 Compatibility aliases:
@@ -83,7 +87,9 @@ Examples:
 (gdb) source python-gdb-ui/gdb_program_ui.py
 (gdb) ui-text
 (gdb) ui-rodata --word-size 4
+(gdb) ui-data --word-size 4
 (gdb) ui-sections --word-size 4
+(gdb) ui-sections --word-size 4 --md
 (gdb) starti
 (gdb) ui-reg eip esi eax
 (gdb) ui-rodata '&LIT' '((unsigned int)&cold_start)+24' --word-size 4 --labels python-gdb-ui/labels.example.txt

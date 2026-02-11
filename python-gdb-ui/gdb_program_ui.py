@@ -3,7 +3,8 @@
 Generic commands:
 - ui-text [start_expr] [end_expr]
 - ui-rodata [start_expr] [end_expr] [--labels FILE] [--word-size N]
-- ui-sections [--labels FILE] [--word-size N]
+- ui-data [start_expr] [end_expr] [--labels FILE] [--word-size N]
+- ui-sections [--labels FILE] [--word-size N] [--md]
 - ui-reg <reg> [reg ...]
 
 Compatibility aliases:
@@ -278,9 +279,10 @@ def parse_words_args(argv: list[str]) -> tuple[str | None, str | None, str | Non
     return start_expr, end_expr, labels_file, word_size
 
 
-def parse_sections_args(argv: list[str]) -> tuple[str | None, int | None]:
+def parse_sections_args(argv: list[str]) -> tuple[str | None, int | None, bool]:
     labels_file: str | None = None
     word_size: int | None = None
+    markdown = False
 
     i = 0
     while i < len(argv):
@@ -300,10 +302,14 @@ def parse_sections_args(argv: list[str]) -> tuple[str | None, int | None]:
                 raise gdb.GdbError(f"Invalid --word-size: {argv[i + 1]}") from exc
             i += 2
             continue
+        if token == "--md":
+            markdown = True
+            i += 1
+            continue
 
-        raise gdb.GdbError("Usage: ui-sections [--labels FILE] [--word-size N]")
+        raise gdb.GdbError("Usage: ui-sections [--labels FILE] [--word-size N] [--md]")
 
-    return labels_file, word_size
+    return labels_file, word_size, markdown
 
 
 def get_text_rows(start_expr: str | None, end_expr: str | None) -> list[TextRow]:
@@ -343,10 +349,54 @@ def get_rodata_rows(
     labels_file: str | None,
     word_size_arg: int | None,
 ) -> list[WordRow]:
+    rows = get_section_word_rows(
+        ".rodata",
+        start_expr,
+        end_expr,
+        labels_file,
+        word_size_arg,
+        allow_missing=False,
+    )
+    if rows is None:
+        raise gdb.GdbError("Could not find .rodata section; pass start/end explicitly")
+    return rows
+
+
+def get_data_rows(
+    start_expr: str | None,
+    end_expr: str | None,
+    labels_file: str | None,
+    word_size_arg: int | None,
+) -> list[WordRow]:
+    rows = get_section_word_rows(
+        ".data",
+        start_expr,
+        end_expr,
+        labels_file,
+        word_size_arg,
+        allow_missing=False,
+    )
+    if rows is None:
+        raise gdb.GdbError("Could not find .data section; pass start/end explicitly")
+    return rows
+
+
+def get_section_word_rows(
+    section_name: str,
+    start_expr: str | None,
+    end_expr: str | None,
+    labels_file: str | None,
+    word_size_arg: int | None,
+    allow_missing: bool,
+) -> list[WordRow] | None:
     if start_expr is None or end_expr is None:
-        bounds = section_bounds(".rodata")
+        bounds = section_bounds(section_name)
         if not bounds:
-            raise gdb.GdbError("Could not find .rodata section; pass start/end explicitly")
+            if allow_missing:
+                return None
+            raise gdb.GdbError(
+                f"Could not find {section_name} section; pass start/end explicitly"
+            )
         default_start, default_end = bounds
         start_addr = default_start if start_expr is None else eval_uint(start_expr)
         end_addr = default_end if end_expr is None else eval_uint(end_expr)
@@ -372,7 +422,7 @@ def get_rodata_rows(
                 value=format_hex(value, word_size),
                 points_to=points_to,
             )
-        )
+            )
 
     return rows
 
@@ -407,36 +457,84 @@ class UiWordsCommand(gdb.Command):
         gdb.write(render_words(rows) + "\n")
 
 
+class UiDataCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("ui-data", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = from_tty
+        start_expr, end_expr, labels_file, word_size_arg = parse_words_args(
+            gdb.string_to_argv(arg)
+        )
+
+        rows = get_data_rows(start_expr, end_expr, labels_file, word_size_arg)
+        gdb.write(render_words(rows) + "\n")
+
+
 class UiSectionsCommand(gdb.Command):
     def __init__(self) -> None:
         super().__init__("ui-sections", gdb.COMMAND_DATA)
 
     def invoke(self, arg: str, from_tty: bool) -> None:
         _ = from_tty
-        labels_file, word_size = parse_sections_args(gdb.string_to_argv(arg))
+        labels_file, word_size, markdown = parse_sections_args(gdb.string_to_argv(arg))
         text_rows = get_text_rows(None, None)
-        rodata_rows = get_rodata_rows(None, None, labels_file, word_size)
-
-        label_w = max(
-            max(len(r.label) for r in text_rows),
-            max(len(r.label) for r in rodata_rows),
+        rodata_rows = get_section_word_rows(
+            ".rodata", None, None, labels_file, word_size, allow_missing=True
         )
-        addr_w = max(
-            max(len(r.address) for r in text_rows),
-            max(len(r.address) for r in rodata_rows),
-        )
-        data_w = max(
-            max(len(r.byte_values) for r in text_rows),
-            max(len(r.value) for r in rodata_rows),
+        data_rows = get_section_word_rows(
+            ".data", None, None, labels_file, word_size, allow_missing=True
         )
 
-        out_parts = [
-            ".text",
-            render_text_with_widths(text_rows, label_w, addr_w, data_w),
-            "",
-            ".rodata",
-            render_words_with_widths(rodata_rows, label_w, addr_w, data_w),
-        ]
+        label_w = max(len(r.label) for r in text_rows)
+        addr_w = max(len(r.address) for r in text_rows)
+        data_w = max(len(r.byte_values) for r in text_rows)
+        for rows in (rodata_rows, data_rows):
+            if rows:
+                label_w = max(label_w, max(len(r.label) for r in rows))
+                addr_w = max(addr_w, max(len(r.address) for r in rows))
+                data_w = max(data_w, max(len(r.value) for r in rows))
+
+        text_out = render_text_with_widths(text_rows, label_w, addr_w, data_w)
+        rodata_out = (
+            render_words_with_widths(rodata_rows, label_w, addr_w, data_w)
+            if rodata_rows is not None
+            else "(section not found)"
+        )
+        data_out = (
+            render_words_with_widths(data_rows, label_w, addr_w, data_w)
+            if data_rows is not None
+            else "(section not found)"
+        )
+
+        if markdown:
+            out_parts = [
+                "## .text",
+                "```",
+                text_out,
+                "```",
+                "",
+                "## .rodata",
+                "```",
+                rodata_out,
+                "```",
+                "",
+                "## .data",
+                "```",
+                data_out,
+                "```",
+            ]
+        else:
+            out_parts = [
+                ".text",
+                text_out,
+                "",
+                ".rodata",
+                rodata_out,
+                "",
+                ".data",
+                data_out,
+            ]
         gdb.write("\n".join(out_parts) + "\n")
 
 
@@ -484,6 +582,7 @@ class AliasUiWordsCommand(gdb.Command):
 
 UiTextCommand()
 UiWordsCommand()
+UiDataCommand()
 UiSectionsCommand()
 UiRegCommand()
 AliasUiWordsCommand()

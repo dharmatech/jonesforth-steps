@@ -1,4 +1,4 @@
-# JonesForth Step-9000 GDB Session 
+# JonesForth Step-9000 GDB Session (Core Trace) 
 # Setup 
 ``` 
 Breakpoint 1 at 0x804900e: file jonesforth.S, line 565.
@@ -11,7 +11,7 @@ Breakpoint 1, _start () at jonesforth.S:565
 ``` 
 Symbols from "/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-9000/jonesforth".
 Native process:
-	Using the running image of child process 1029158.
+	Using the running image of child process 1089524.
 	While running this, GDB does not access memory from...
 Local exec file:
 	`/home/dharmatech/docs/jonesforth-on-64/jonesforth-steps/step-9000/jonesforth', file type elf32-i386.
@@ -39,7 +39,7 @@ Local exec file:
 
 # `info proc mappings` 
 ``` 
-process 1029158
+process 1089524
 Mapped address spaces:
 
 	Start Addr   End Addr       Size     Offset  Perms   objfile
@@ -50,7 +50,10 @@ Mapped address spaces:
 	0xf7ffc000 0xf7ffe000     0x2000        0x0  r-xp   [vdso]
 	0xfffdc000 0xffffe000    0x22000        0x0  rwxp   [stack]
 ``` 
-.text
+
+# Memory Map 
+## .text
+```
 DOCOL                0x08049000 8d 6d fc                      lea    -0x4(%ebp),%ebp
                      0x08049003 89 75 00                      mov    %esi,0x0(%ebp)
                      0x08049006 83 c0 04                      add    $0x4,%eax
@@ -741,8 +744,10 @@ set_up_data_segment  0x08049599 31 db                         xor    %ebx,%ebx
                      0x080495ac 89 c3                         mov    %eax,%ebx
                      0x080495ae b8 2d 00 00 00                mov    $0x2d,%eax
                      0x080495b3 cd 80                         int    $0x80
+```
 
-.rodata
+## .rodata
+```
 cold_start           0x0804a000 0x0804a624                     QUIT
 name_DROP            0x0804a004 0x00000000
                      0x0804a008 0x4f524404
@@ -1179,5191 +1184,23001 @@ name_SYSCALL0        0x0804a6bc 0x0804a6a8                     name_SYSCALL1
                      0x0804a6c4 0x4c4c4143
                      0x0804a6c8 0x00000030
 SYSCALL0             0x0804a6cc 0x08049592                     code_SYSCALL0
+```
+
+## .data
+```
+var_STATE            0x0804b6d0 0x00000000
+var_HERE             0x0804b6d4 0x00000000
+var_LATEST           0x0804b6d8 0x0804a6bc                     name_SYSCALL0
+var_S0               0x0804b6dc 0x00000000
+var_BASE             0x0804b6e0 0x0000000a
+currkey              0x0804b6e4 0x0804e000                     return_stack_top
+bufftop              0x0804b6e8 0x0804e000                     return_stack_top
+emit_scratch         0x0804b6ec 0x00000000
+                     0x0804b6f0 0x00000000
+                     0x0804b6f4 0x00000000
+                     0x0804b6f8 0x00000000
+                     0x0804b6fc 0x00000000
+                     0x0804b700 0x00000000
+                     0x0804b704 0x00000000
+                     0x0804b708 0x00000000
+                     0x0804b70c 0x00000000
+interpret_is_lit     0x0804b710 0x00000000
+```
 
 # Single Stepping 
 ``` 
+Temporary breakpoint 2 at 0x80494ad: file jonesforth.S, line 2092.
+
+Temporary breakpoint 2, code_INTERPRET () at jonesforth.S:2092
+2092		xor %eax,%eax
 --------------------
-566		mov %esp,var_S0		// Save the initial data stack pointer in FORTH variable S0.
+2093		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
 
-$pc         x/i $pc$eax 0x00000000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-567		mov $return_stack_top,%ebp // Initialise the return stack.
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-_start () at jonesforth.S:568
-568		call set_up_data_segment
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-set_up_data_segment () at jonesforth.S:2267
-2267		xor %ebx,%ebx		// Call brk(0)
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2268		movl $__NR_brk,%eax
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2269		int $0x80
-
-$pc         x/i $pc$eax 0x0000002d
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2270		movl %eax,var_HERE	// Initialise HERE to point at beginning of data segment.
-
-$pc         x/i $pc$eax 0x0804f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2271		addl $INITIAL_DATA_SEGMENT_SIZE,%eax	// Reserve nn bytes of memory for initial data segment.
-
-$pc         x/i $pc$eax 0x0804f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2272		movl %eax,%ebx		// Call brk(HERE+INITIAL_DATA_SEGMENT_SIZE)
-
-$pc         x/i $pc$eax 0x0805f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2273		movl $__NR_brk,%eax
-
-$pc         x/i $pc$eax 0x0805f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2274		int $0x80
-
-$pc         x/i $pc$eax 0x0000002d
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-2275		ret
-
-$pc         x/i $pc$eax 0x0805f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-_start () at jonesforth.S:570
-570		mov $cold_start,%esi	// Initialise interpreter.
-
-$pc         x/i $pc$eax 0x0805f000
-$esi 0x00000000
-$esp         x/4dw $esp--------------------
-571		NEXT			// Run interpreter!
-
-$pc         x/i $pc$eax 0x0805f000
-$esi 0x0804a000  cold_start
-$esp         x/4dw $esp--------------------
-0x08049025	571		NEXT			// Run interpreter!
-
-$pc         x/i $pc$eax 0x0804a624  QUIT
-$esi 0x0804a004  name_DROP
-$esp         x/4dw $esp--------------------
-DOCOL () at jonesforth.S:500
-500		PUSHRSP %esi		// push %esi on to the return stack
-
-$pc         x/i $pc$eax 0x0804a624  QUIT
-$esi 0x0804a004  name_DROP
-$esp         x/4dw $esp--------------------
-0x08049003	500		PUSHRSP %esi		// push %esi on to the return stack
-
-$pc         x/i $pc$eax 0x0804a624  QUIT
-$esi 0x0804a004  name_DROP
-$esp         x/4dw $esp--------------------
-501		addl $4,%eax		// %eax points to codeword, so make
-
-$pc         x/i $pc$eax 0x0804a624  QUIT
-$esi 0x0804a004  name_DROP
-$esp         x/4dw $esp--------------------
-502		movl %eax,%esi		// %esi point to first data word
-
-$pc         x/i $pc$eax 0x0804a628  QUIT + 4
-$esi 0x0804a004  name_DROP
-$esp         x/4dw $esp--------------------
-503		NEXT
-
-$pc         x/i $pc$eax 0x0804a628  QUIT + 4
-$esi 0x0804a628  QUIT + 4
-$esp         x/4dw $esp--------------------
-0x0804900c	503		NEXT
-
-$pc         x/i $pc$eax 0x0804a2ac  RZ
-$esi 0x0804a62c  QUIT + 8
-$esp         x/4dw $esp--------------------
-code_RZ () at jonesforth.S:1161
-1161		defconst "R0",2,,RZ,return_stack_top
-
-$pc         x/i $pc$eax 0x0804a2ac  RZ
-$esi 0x0804a62c  QUIT + 8
-$esp         x/4dw $esp--------------------
-0x080491fb in code_RZ () at jonesforth.S:1161
-1161		defconst "R0",2,,RZ,return_stack_top
-
-$pc         x/i $pc$eax 0x0804a2ac  RZ
-$esi 0x0804a62c  QUIT + 8
-$esp         x/4dw $esp--------------------
-0x080491fc	1161		defconst "R0",2,,RZ,return_stack_top
-
-$pc         x/i $pc$eax 0x0804a444  RSPSTORE
-$esi 0x0804a630  QUIT + 12
-$esp         x/4dw $esp--------------------
-code_RSPSTORE () at jonesforth.S:1206
-1206		pop %ebp
-
-$pc         x/i $pc$eax 0x0804a444  RSPSTORE
-$esi 0x0804a630  QUIT + 12
-$esp         x/4dw $esp--------------------
-code_RSPSTORE () at jonesforth.S:1207
-1207		NEXT
-
-$pc         x/i $pc$eax 0x0804a444  RSPSTORE
-$esi 0x0804a630  QUIT + 12
-$esp         x/4dw $esp--------------------
-0x08049289	1207		NEXT
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x80494af <code_INTERPRET+7>:	mov    %eax,0x804b710
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2094		call _FIND		// Returns %eax = pointer to header or 0 if not found.
+
+$pc => 0x80494b4 <code_INTERPRET+12>:	call   0x80493b5 <_FIND>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+_FIND () at jonesforth.S:1513
+1513		push %esi		// Save %esi so we can use it in string comparison.
+
+$pc => 0x80493b5 <_FIND>:	push   %esi
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517945	1	-13455	0
+--------------------
+1516		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
+
+$pc => 0x80493b6 <_FIND+1>:	mov    0x804b6d8,%edx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000089
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a47d  name_KEY + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a1d9  name_LIT + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a1ad  name_XOR + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a195  name_AND + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a189  name_ZGE + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a17d  name_ZLE + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a159  name_ZNEQU + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a045  name_ROT + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a029  name_DUP + 5
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e0:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	3	134522420	134517945	1
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+1547		pop %esi
+
+$pc => 0x80493de <_FIND+41>:	pop    %esi
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e8:	134522420	134517945	1	-13455
+--------------------
+_FIND () at jonesforth.S:1548
+1548		xor %eax,%eax		// Return zero to indicate not found.
+
+$pc => 0x80493df <_FIND+42>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517945	1	-13455	0
+--------------------
+_FIND () at jonesforth.S:1549
+1549		ret
+
+$pc => 0x80493e1 <_FIND+44>:	ret    
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517945	1	-13455	0
+--------------------
+code_INTERPRET () at jonesforth.S:2095
+2095		test %eax,%eax		// Found?
+
+$pc => 0x80494b9 <code_INTERPRET+17>:	test   %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2096		jz 1f
+
+$pc => 0x80494bb <code_INTERPRET+19>:	je     0x80494d3 <code_INTERPRET+43>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2111		incl interpret_is_lit
+
+$pc => 0x80494d3 <code_INTERPRET+43>:	incl   0x804b710
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2112		call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
+
+$pc => 0x80494d9 <code_INTERPRET+49>:	call   0x804935e <_NUMBER>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+_NUMBER () at jonesforth.S:1429
+1429		xor %eax,%eax
+
+$pc => 0x804935e <_NUMBER>:	xor    %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1430		xor %ebx,%ebx
+
+$pc => 0x8049360 <_NUMBER+2>:	xor    %ebx,%ebx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1432		test %ecx,%ecx		// trying to parse a zero-length string is an error, but will return 0.
+
+$pc => 0x8049362 <_NUMBER+4>:	test   %ecx,%ecx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1433		jz 5f
+
+$pc => 0x8049364 <_NUMBER+6>:	je     0x80493a9 <_NUMBER+75>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1435		movl var_BASE,%edx	// get BASE (in %dl)
+
+$pc => 0x8049366 <_NUMBER+8>:	mov    0x804b6e0,%edx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1438		movb (%edi),%bl		// %bl = first character in string
+
+$pc => 0x804936c <_NUMBER+14>:	mov    (%edi),%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1439		inc %edi
+
+$pc => 0x804936e <_NUMBER+16>:	inc    %edi
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1440		push %eax		// push 0 on stack
+
+$pc => 0x804936f <_NUMBER+17>:	push   %eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+_NUMBER () at jonesforth.S:1441
+1441		cmpb $'-',%bl		// negative number?
+
+$pc => 0x8049370 <_NUMBER+18>:	cmp    $0x2d,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1442		jnz 2f
+
+$pc => 0x8049373 <_NUMBER+21>:	jne    0x8049387 <_NUMBER+41>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1452	1:	imull %edx,%eax		// %eax *= BASE
+
+$pc => 0x8049381 <_NUMBER+35>:	imul   %edx,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1453		movb (%edi),%bl		// %bl = next character in string
+
+$pc => 0x8049384 <_NUMBER+38>:	mov    (%edi),%bl
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1454		inc %edi
+
+$pc => 0x8049386 <_NUMBER+40>:	inc    %edi
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x0000000a
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x0000000c
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x0000000c
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1452	1:	imull %edx,%eax		// %eax *= BASE
+
+$pc => 0x8049381 <_NUMBER+35>:	imul   %edx,%eax
+$eax 0x0000000c
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1453		movb (%edi),%bl		// %bl = next character in string
+
+$pc => 0x8049384 <_NUMBER+38>:	mov    (%edi),%bl
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1454		inc %edi
+
+$pc => 0x8049386 <_NUMBER+40>:	inc    %edi
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x00000078
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+1474	4:	pop %ebx
+
+$pc => 0x80493a2 <_NUMBER+68>:	pop    %ebx
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	0	134517982	1	-13455
+--------------------
+_NUMBER () at jonesforth.S:1475
+1475		test %ebx,%ebx
+
+$pc => 0x80493a3 <_NUMBER+69>:	test   %ebx,%ebx
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1476		jz 5f
+
+$pc => 0x80493a5 <_NUMBER+71>:	je     0x80493a9 <_NUMBER+75>
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+1479	5:	ret
+
+$pc => 0x80493a9 <_NUMBER+75>:	ret    
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	134517982	1	-13455	0
+--------------------
+code_INTERPRET () at jonesforth.S:2113
+2113		test %ecx,%ecx
+
+$pc => 0x80494de <code_INTERPRET+54>:	test   %ecx,%ecx
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2114		jnz 6f
+
+$pc => 0x80494e0 <code_INTERPRET+56>:	jne    0x804951c <code_INTERPRET+116>
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2115		mov %eax,%ebx
+
+$pc => 0x80494e2 <code_INTERPRET+58>:	mov    %eax,%ebx
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2116		mov $LIT,%eax		// The word is LIT
+
+$pc => 0x80494e4 <code_INTERPRET+60>:	mov    $0x804a1dc,%eax
+$eax 0x0000007b
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2119		movl var_STATE,%edx
+
+$pc => 0x80494e9 <code_INTERPRET+65>:	mov    0x804b6d0,%edx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2120		test %edx,%edx
+
+$pc => 0x80494ef <code_INTERPRET+71>:	test   %edx,%edx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2121		jz 4f			// Jump if executing.
+
+$pc => 0x80494f1 <code_INTERPRET+73>:	je     0x804950c <code_INTERPRET+100>
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2133		mov interpret_is_lit,%ecx // Literal?
+
+$pc => 0x804950c <code_INTERPRET+100>:	mov    0x804b710,%ecx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2134		test %ecx,%ecx		// Literal?
+
+$pc => 0x8049512 <code_INTERPRET+106>:	test   %ecx,%ecx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2135		jnz 5f
+
+$pc => 0x8049514 <code_INTERPRET+108>:	jne    0x8049518 <code_INTERPRET+112>
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+2142		push %ebx
+
+$pc => 0x8049518 <code_INTERPRET+112>:	push   %ebx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9f0:	1	-13455	0	-13378
+--------------------
+code_INTERPRET () at jonesforth.S:2143
+2143		NEXT
+
+$pc => 0x8049519 <code_INTERPRET+113>:	lods   %ds:(%esi),%eax
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+0x0804951a	2143		NEXT
+
+$pc => 0x804951a <code_INTERPRET+114>:	jmp    *(%eax)
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+code_BRANCH () at jonesforth.S:2028
+2028		add (%esi),%esi		// add the offset to the instruction pointer
+
+$pc => 0x804947b <code_BRANCH>:	add    (%esi),%esi
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2029		NEXT
+
+$pc => 0x804947d <code_BRANCH+2>:	lods   %ds:(%esi),%eax
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a630  QUIT + 12
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+0x0804947e	2029		NEXT
+
+$pc => 0x804947e <code_BRANCH+3>:	jmp    *(%eax)
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
 code_INTERPRET () at jonesforth.S:2089
 2089		call _WORD		// Returns %ecx = length, %edi = pointer to word.
 
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x80494a8 <code_INTERPRET>:	call   0x804931d <_WORD>
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
 _WORD () at jonesforth.S:1371
 1371		call _KEY		// get next key, returned in %eax
 
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x804931d <_WORD>:	call   0x80492a4 <_KEY>
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1282		xor %ebx,%ebx		// 1st param: stdin
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1283		mov $buffer,%ecx	// 2nd param: buffer
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1284		mov %ecx,currkey
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1285		mov $BUFFER_SIZE,%edx	// 3rd param: max length
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1286		mov $__NR_read,%eax	// syscall: read
-
-$pc         x/i $pc$eax 0x0804a64c  INTERPRET
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1287		int $0x80
-
-$pc         x/i $pc$eax 0x00000003
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1288		test %eax,%eax		// If %eax <= 0, then exit.
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1289		jbe 2f
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1290		addl %eax,%ecx		// buffer+%eax = bufftop
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1291		mov %ecx,bufftop
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1292		jmp _KEY
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00001000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00001000
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517538	134517933	123	1
+--------------------
 _WORD () at jonesforth.S:1372
 1372		cmpb $'\\',%al		// start of a comment?
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049322 <_WORD+5>:	cmp    $0x5c,%al
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
 1373		je 3f			// if so, skip the comment
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049324 <_WORD+7>:	je     0x8049347 <_WORD+42>
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1374		cmpb $' ',%al
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049326 <_WORD+9>:	cmp    $0x20,%al
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1375		jbe 1b			// if so, keep looking
+
+$pc => 0x8049328 <_WORD+11>:	jbe    0x804931d <_WORD>
+$eax 0x00000034
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1378		mov $word_buffer,%edi	// pointer to return buffer
+
+$pc => 0x804932a <_WORD+13>:	mov    $0x804b6ed,%edi
+$eax 0x00000034
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1380		stosb			// add character to return buffer
+
+$pc => 0x804932f <_WORD+18>:	stos   %al,%es:(%edi)
+$eax 0x00000034
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1381		call _KEY		// get next key, returned in %al
+
+$pc => 0x8049330 <_WORD+19>:	call   0x80492a4 <_KEY>
+$eax 0x00000034
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x00000034
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
+_WORD () at jonesforth.S:1382
+1382		cmpb $' ',%al		// is blank?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x8049335 <_WORD+24>:	cmp    $0x20,%al
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1383		ja 2b			// if not, keep looping
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x8049337 <_WORD+26>:	ja     0x804932f <_WORD+18>
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1380		stosb			// add character to return buffer
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x804932f <_WORD+18>:	stos   %al,%es:(%edi)
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1381		call _KEY		// get next key, returned in %al
+
+$pc => 0x8049330 <_WORD+19>:	call   0x80492a4 <_KEY>
+$eax 0x00000035
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x00000035
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
+_WORD () at jonesforth.S:1382
+1382		cmpb $' ',%al		// is blank?
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x8049335 <_WORD+24>:	cmp    $0x20,%al
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1383		ja 2b			// if not, keep looping
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x8049337 <_WORD+26>:	ja     0x804932f <_WORD+18>
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1380		stosb			// add character to return buffer
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x804932f <_WORD+18>:	stos   %al,%es:(%edi)
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1381		call _KEY		// get next key, returned in %al
+
+$pc => 0x8049330 <_WORD+19>:	call   0x80492a4 <_KEY>
+$eax 0x00000036
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x00000036
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134517557	134517933	123	1
+--------------------
+_WORD () at jonesforth.S:1382
+1382		cmpb $' ',%al		// is blank?
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x8049335 <_WORD+24>:	cmp    $0x20,%al
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1383		ja 2b			// if not, keep looping
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x8049337 <_WORD+26>:	ja     0x804932f <_WORD+18>
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1386		sub $word_buffer,%edi
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x8049339 <_WORD+28>:	sub    $0x804b6ed,%edi
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1387		mov %edi,%ecx		// return length of the word
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x804933f <_WORD+34>:	mov    %edi,%ecx
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1388		mov $word_buffer,%edi	// return address of the word
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x8049341 <_WORD+36>:	mov    $0x804b6ed,%edi
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+1389		ret
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x8049346 <_WORD+41>:	ret    
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e8:	134517933	123	1	-13455
+--------------------
+code_INTERPRET () at jonesforth.S:2092
+2092		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80494ad <code_INTERPRET+5>:	xor    %eax,%eax
+$eax 0x00000020
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2093		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80494af <code_INTERPRET+7>:	mov    %eax,0x804b710
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2094		call _FIND		// Returns %eax = pointer to header or 0 if not found.
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80494b4 <code_INTERPRET+12>:	call   0x80493b5 <_FIND>
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+_FIND () at jonesforth.S:1513
+1513		push %esi		// Save %esi so we can use it in string comparison.
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493b5 <_FIND>:	push   %esi
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e8:	134517945	123	1	-13455
+--------------------
+1516		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493b6 <_FIND+1>:	mov    0x804b6d8,%edx
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000065
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000074
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002a
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002d
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1396		jmp 1b
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000089
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a47d  name_KEY + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x0000000a
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a47e  name_KEY + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a1d9  name_LIT + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a1da  name_LIT + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a1ad  name_XOR + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a1ae  name_XOR + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a195  name_AND + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a196  name_AND + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a189  name_ZGE + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a18a  name_ZGE + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a17d  name_ZLE + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a17e  name_ZLE + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a159  name_ZNEQU + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a15a  name_ZNEQU + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a045  name_ROT + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000003
+$esi 0x0804a046  name_ROT + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000003
+$esi 0x0804a029  name_DUP + 5
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9dc:	134526701	3	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e0:	3	134522420	134517945	123
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+1547		pop %esi
+
+$pc => 0x80493de <_FIND+41>:	pop    %esi
+$eax 0x00000004
+$esi 0x0804a02a  name_DUP + 6
+$esp 0xffffc9e4:	134522420	134517945	123	1
+--------------------
+_FIND () at jonesforth.S:1548
+1548		xor %eax,%eax		// Return zero to indicate not found.
+
+$pc => 0x80493df <_FIND+42>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517945	123	1	-13455
+--------------------
+_FIND () at jonesforth.S:1549
+1549		ret
+
+$pc => 0x80493e1 <_FIND+44>:	ret    
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517945	123	1	-13455
+--------------------
+code_INTERPRET () at jonesforth.S:2095
+2095		test %eax,%eax		// Found?
+
+$pc => 0x80494b9 <code_INTERPRET+17>:	test   %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2096		jz 1f
+
+$pc => 0x80494bb <code_INTERPRET+19>:	je     0x80494d3 <code_INTERPRET+43>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2111		incl interpret_is_lit
+
+$pc => 0x80494d3 <code_INTERPRET+43>:	incl   0x804b710
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2112		call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
+
+$pc => 0x80494d9 <code_INTERPRET+49>:	call   0x804935e <_NUMBER>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+_NUMBER () at jonesforth.S:1429
+1429		xor %eax,%eax
+
+$pc => 0x804935e <_NUMBER>:	xor    %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1430		xor %ebx,%ebx
+
+$pc => 0x8049360 <_NUMBER+2>:	xor    %ebx,%ebx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1432		test %ecx,%ecx		// trying to parse a zero-length string is an error, but will return 0.
+
+$pc => 0x8049362 <_NUMBER+4>:	test   %ecx,%ecx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1433		jz 5f
+
+$pc => 0x8049364 <_NUMBER+6>:	je     0x80493a9 <_NUMBER+75>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1435		movl var_BASE,%edx	// get BASE (in %dl)
+
+$pc => 0x8049366 <_NUMBER+8>:	mov    0x804b6e0,%edx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1438		movb (%edi),%bl		// %bl = first character in string
+
+$pc => 0x804936c <_NUMBER+14>:	mov    (%edi),%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1439		inc %edi
+
+$pc => 0x804936e <_NUMBER+16>:	inc    %edi
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1440		push %eax		// push 0 on stack
+
+$pc => 0x804936f <_NUMBER+17>:	push   %eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+_NUMBER () at jonesforth.S:1441
+1441		cmpb $'-',%bl		// negative number?
+
+$pc => 0x8049370 <_NUMBER+18>:	cmp    $0x2d,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1442		jnz 2f
+
+$pc => 0x8049373 <_NUMBER+21>:	jne    0x8049387 <_NUMBER+41>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1452	1:	imull %edx,%eax		// %eax *= BASE
+
+$pc => 0x8049381 <_NUMBER+35>:	imul   %edx,%eax
+$eax 0x00000004
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1453		movb (%edi),%bl		// %bl = next character in string
+
+$pc => 0x8049384 <_NUMBER+38>:	mov    (%edi),%bl
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1454		inc %edi
+
+$pc => 0x8049386 <_NUMBER+40>:	inc    %edi
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x00000028
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x0000002d
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x0000002d
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1452	1:	imull %edx,%eax		// %eax *= BASE
+
+$pc => 0x8049381 <_NUMBER+35>:	imul   %edx,%eax
+$eax 0x0000002d
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1453		movb (%edi),%bl		// %bl = next character in string
+
+$pc => 0x8049384 <_NUMBER+38>:	mov    (%edi),%bl
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1454		inc %edi
+
+$pc => 0x8049386 <_NUMBER+40>:	inc    %edi
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1457	2:	subb $'0',%bl		// < '0'?
+
+$pc => 0x8049387 <_NUMBER+41>:	sub    $0x30,%bl
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1458		jb 4f
+
+$pc => 0x804938a <_NUMBER+44>:	jb     0x80493a2 <_NUMBER+68>
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1459		cmp $10,%bl		// <= '9'?
+
+$pc => 0x804938c <_NUMBER+46>:	cmp    $0xa,%bl
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1460		jb 3f
+
+$pc => 0x804938f <_NUMBER+49>:	jb     0x8049399 <_NUMBER+59>
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1465	3:	cmp %dl,%bl		// >= BASE?
+
+$pc => 0x8049399 <_NUMBER+59>:	cmp    %dl,%bl
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1466		jge 4f
+
+$pc => 0x804939b <_NUMBER+61>:	jge    0x80493a2 <_NUMBER+68>
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1469		add %ebx,%eax
+
+$pc => 0x804939d <_NUMBER+63>:	add    %ebx,%eax
+$eax 0x000001c2
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1470		dec %ecx
+
+$pc => 0x804939f <_NUMBER+65>:	dec    %ecx
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1471		jnz 1b
+
+$pc => 0x80493a0 <_NUMBER+66>:	jne    0x8049381 <_NUMBER+35>
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+1474	4:	pop %ebx
+
+$pc => 0x80493a2 <_NUMBER+68>:	pop    %ebx
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	0	134517982	123	1
+--------------------
+_NUMBER () at jonesforth.S:1475
+1475		test %ebx,%ebx
+
+$pc => 0x80493a3 <_NUMBER+69>:	test   %ebx,%ebx
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1476		jz 5f
+
+$pc => 0x80493a5 <_NUMBER+71>:	je     0x80493a9 <_NUMBER+75>
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+1479	5:	ret
+
+$pc => 0x80493a9 <_NUMBER+75>:	ret    
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517982	123	1	-13455
+--------------------
+code_INTERPRET () at jonesforth.S:2113
+2113		test %ecx,%ecx
+
+$pc => 0x80494de <code_INTERPRET+54>:	test   %ecx,%ecx
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2114		jnz 6f
+
+$pc => 0x80494e0 <code_INTERPRET+56>:	jne    0x804951c <code_INTERPRET+116>
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2115		mov %eax,%ebx
+
+$pc => 0x80494e2 <code_INTERPRET+58>:	mov    %eax,%ebx
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2116		mov $LIT,%eax		// The word is LIT
+
+$pc => 0x80494e4 <code_INTERPRET+60>:	mov    $0x804a1dc,%eax
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2119		movl var_STATE,%edx
+
+$pc => 0x80494e9 <code_INTERPRET+65>:	mov    0x804b6d0,%edx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2120		test %edx,%edx
+
+$pc => 0x80494ef <code_INTERPRET+71>:	test   %edx,%edx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2121		jz 4f			// Jump if executing.
+
+$pc => 0x80494f1 <code_INTERPRET+73>:	je     0x804950c <code_INTERPRET+100>
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2133		mov interpret_is_lit,%ecx // Literal?
+
+$pc => 0x804950c <code_INTERPRET+100>:	mov    0x804b710,%ecx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2134		test %ecx,%ecx		// Literal?
+
+$pc => 0x8049512 <code_INTERPRET+106>:	test   %ecx,%ecx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2135		jnz 5f
+
+$pc => 0x8049514 <code_INTERPRET+108>:	jne    0x8049518 <code_INTERPRET+112>
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+2142		push %ebx
+
+$pc => 0x8049518 <code_INTERPRET+112>:	push   %ebx
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+code_INTERPRET () at jonesforth.S:2143
+2143		NEXT
+
+$pc => 0x8049519 <code_INTERPRET+113>:	lods   %ds:(%esi),%eax
+$eax 0x0804a1dc  LIT
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+0x0804951a	2143		NEXT
+
+$pc => 0x804951a <code_INTERPRET+114>:	jmp    *(%eax)
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+code_BRANCH () at jonesforth.S:2028
+2028		add (%esi),%esi		// add the offset to the instruction pointer
+
+$pc => 0x804947b <code_BRANCH>:	add    (%esi),%esi
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2029		NEXT
+
+$pc => 0x804947d <code_BRANCH+2>:	lods   %ds:(%esi),%eax
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a630  QUIT + 12
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+0x0804947e	2029		NEXT
+
+$pc => 0x804947e <code_BRANCH+3>:	jmp    *(%eax)
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+code_INTERPRET () at jonesforth.S:2089
+2089		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+
+$pc => 0x80494a8 <code_INTERPRET>:	call   0x804931d <_WORD>
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+_WORD () at jonesforth.S:1371
 1371		call _KEY		// get next key, returned in %eax
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x804931d <_WORD>:	call   0x80492a4 <_KEY>
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000000a
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x0804a64c  INTERPRET
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517538	134517933	456	123
+--------------------
 _WORD () at jonesforth.S:1372
 1372		cmpb $'\\',%al		// start of a comment?
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049322 <_WORD+5>:	cmp    $0x5c,%al
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
 1373		je 3f			// if so, skip the comment
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049324 <_WORD+7>:	je     0x8049347 <_WORD+42>
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1374		cmpb $' ',%al
 
-$pc         x/i $pc$eax 0x0000005c
+$pc => 0x8049326 <_WORD+9>:	cmp    $0x20,%al
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000005c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000005c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000005c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000005c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000009
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000041
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000046
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000004f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000052
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000054
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000048
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000063
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006d
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000070
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000064
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000075
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000061
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000066
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000006f
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000072
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000020
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x0000004c
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1375		jbe 1b			// if so, keep looking
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x8049328 <_WORD+11>:	jbe    0x804931d <_WORD>
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
-
-$pc         x/i $pc$eax 0x00000069
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
-
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1378		mov $word_buffer,%edi	// pointer to return buffer
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x804932a <_WORD+13>:	mov    $0x804b6ed,%edi
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
-
-$pc         x/i $pc$eax 0x0000006e
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1380		stosb			// add character to return buffer
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x804932f <_WORD+18>:	stos   %al,%es:(%edi)
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1381		call _KEY		// get next key, returned in %al
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x8049330 <_WORD+19>:	call   0x80492a4 <_KEY>
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
 _KEY () at jonesforth.S:1272
 1272		mov (currkey),%ebx
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1273		cmp (bufftop),%ebx
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1274		jge 1f			// exhausted the input buffer?
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1275		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000006e
+$pc => 0x80492b2 <_KEY+14>:	xor    %eax,%eax
+$eax 0x0000002b
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1276		mov (%ebx),%al		// get next key from input buffer
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80492b4 <_KEY+16>:	mov    (%ebx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1277		inc %ebx
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x80492b6 <_KEY+18>:	inc    %ebx
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1278		mov %ebx,(currkey)	// increment currkey
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x80492b7 <_KEY+19>:	mov    %ebx,0x804b6e4
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
 1279		ret
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x80492bd <_KEY+25>:	ret    
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134517557	134517933	456	123
+--------------------
+_WORD () at jonesforth.S:1382
+1382		cmpb $' ',%al		// is blank?
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x8049335 <_WORD+24>:	cmp    $0x20,%al
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1383		ja 2b			// if not, keep looping
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x8049337 <_WORD+26>:	ja     0x804932f <_WORD+18>
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1386		sub $word_buffer,%edi
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x8049339 <_WORD+28>:	sub    $0x804b6ed,%edi
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1387		mov %edi,%ecx		// return length of the word
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x804933f <_WORD+34>:	mov    %edi,%ecx
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1388		mov $word_buffer,%edi	// return address of the word
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x8049341 <_WORD+36>:	mov    $0x804b6ed,%edi
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+1389		ret
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x8049346 <_WORD+41>:	ret    
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e4:	134517933	456	123	1
+--------------------
+code_INTERPRET () at jonesforth.S:2092
+2092		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000075
+$pc => 0x80494ad <code_INTERPRET+5>:	xor    %eax,%eax
+$eax 0x0000000a
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2093		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80494af <code_INTERPRET+7>:	mov    %eax,0x804b710
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2094		call _FIND		// Returns %eax = pointer to header or 0 if not found.
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80494b4 <code_INTERPRET+12>:	call   0x80493b5 <_FIND>
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+_FIND () at jonesforth.S:1513
+1513		push %esi		// Save %esi so we can use it in string comparison.
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493b5 <_FIND>:	push   %esi
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e4:	134517945	456	123	1
+--------------------
+1516		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493b6 <_FIND+1>:	mov    0x804b6d8,%edx
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000078
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x0000002f
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000069
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000033
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000038
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000036
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000020
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000073
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
 
-$pc         x/i $pc$eax 0x00000079
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
 
-$pc         x/i $pc$eax 0x00000000
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
 $esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a5cd  name_TICK + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000073
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1393		call _KEY
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_KEY () at jonesforth.S:1272
-1272		mov (currkey),%ebx
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1273		cmp (bufftop),%ebx
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1274		jge 1f			// exhausted the input buffer?
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1275		xor %eax,%eax
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
 
-$pc         x/i $pc$eax 0x00000074
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1276		mov (%ebx),%al		// get next key from input buffer
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
 
-$pc         x/i $pc$eax 0x00000000
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1277		inc %ebx
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
 
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1278		mov %ebx,(currkey)	// increment currkey
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
 
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1279		ret
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
 
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-_WORD () at jonesforth.S:1394
-1394		cmpb $'\n',%al		// end of line yet?
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
 
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp--------------------
-1395		jne 3b
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
 
-$pc         x/i $pc$eax 0x00000065
-$esi 0x0804a634  QUIT + 16
-$esp         x/4dw $esp``` 
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000089
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a5ce  name_TICK + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a55d  name_SEMICOLON + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a55e  name_SEMICOLON + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a529  name_COLON + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a52a  name_COLON + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a51d  name_RBRAC + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000081
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a51e  name_RBRAC + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a511  name_LBRAC + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a512  name_LBRAC + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a505  name_COMMA + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x0000000a
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000009
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000008
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000007
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000005
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a506  name_COMMA + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a1f1  name_FETCH + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a1f2  name_FETCH + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a1e5  name_STORE + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000006
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000003
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a1e6  name_STORE + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a129  name_GT + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a12a  name_GT + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a11d  name_LT + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000002
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a11e  name_LT + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a105  name_EQU + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000004
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a106  name_EQU + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a0e9  name_MUL + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a0ea  name_MUL + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a0dd  name_SUB + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1543	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+
+$pc => 0x80493da <_FIND+37>:	mov    (%edx),%edx
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1544		jmp 1b			// .. and loop.
+
+$pc => 0x80493dc <_FIND+39>:	jmp    0x80493bc <_FIND+7>
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1517	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+
+$pc => 0x80493bc <_FIND+7>:	test   %edx,%edx
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1518		je 4f
+
+$pc => 0x80493be <_FIND+9>:	je     0x80493de <_FIND+41>
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1523		xor %eax,%eax
+
+$pc => 0x80493c0 <_FIND+11>:	xor    %eax,%eax
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1524		movb 4(%edx),%al	// %al = flags+length field
+
+$pc => 0x80493c2 <_FIND+13>:	mov    0x4(%edx),%al
+$eax 0x00000000
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1525		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+
+$pc => 0x80493c5 <_FIND+16>:	and    $0x3f,%al
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1526		cmpb %cl,%al		// Length is the same?
+
+$pc => 0x80493c7 <_FIND+18>:	cmp    %cl,%al
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1527		jne 2f
+
+$pc => 0x80493c9 <_FIND+20>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1530		push %ecx		// Save the length
+
+$pc => 0x80493cb <_FIND+22>:	push   %ecx
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1531
+1531		push %edi		// Save the address (repe cmpsb will move this pointer)
+
+$pc => 0x80493cc <_FIND+23>:	push   %edi
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1532
+1532		lea 5(%edx),%esi	// Dictionary string we are checking against.
+
+$pc => 0x80493cd <_FIND+24>:	lea    0x5(%edx),%esi
+$eax 0x00000001
+$esi 0x0804a0de  name_SUB + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1533		repe cmpsb		// Compare the strings.
+
+$pc => 0x80493d0 <_FIND+27>:	repz cmpsb %es:(%edi),%ds:(%esi)
+$eax 0x00000001
+$esi 0x0804a0d1  name_ADD + 5
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+1534		pop %edi
+
+$pc => 0x80493d2 <_FIND+29>:	pop    %edi
+$eax 0x00000001
+$esi 0x0804a0d2  name_ADD + 6
+$esp 0xffffc9d8:	134526701	1	134522420	134517945
+--------------------
+_FIND () at jonesforth.S:1535
+1535		pop %ecx
+
+$pc => 0x80493d3 <_FIND+30>:	pop    %ecx
+$eax 0x00000001
+$esi 0x0804a0d2  name_ADD + 6
+$esp 0xffffc9dc:	1	134522420	134517945	456
+--------------------
+_FIND () at jonesforth.S:1536
+1536		jne 2f			// Not the same.
+
+$pc => 0x80493d4 <_FIND+31>:	jne    0x80493da <_FIND+37>
+$eax 0x00000001
+$esi 0x0804a0d2  name_ADD + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+1539		pop %esi
+
+$pc => 0x80493d6 <_FIND+33>:	pop    %esi
+$eax 0x00000001
+$esi 0x0804a0d2  name_ADD + 6
+$esp 0xffffc9e0:	134522420	134517945	456	123
+--------------------
+_FIND () at jonesforth.S:1540
+1540		mov %edx,%eax
+
+$pc => 0x80493d7 <_FIND+34>:	mov    %edx,%eax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517945	456	123	1
+--------------------
+_FIND () at jonesforth.S:1541
+1541		ret
+
+$pc => 0x80493d9 <_FIND+36>:	ret    
+$eax 0x0804a0cc  name_ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517945	456	123	1
+--------------------
+code_INTERPRET () at jonesforth.S:2095
+2095		test %eax,%eax		// Found?
+
+$pc => 0x80494b9 <code_INTERPRET+17>:	test   %eax,%eax
+$eax 0x0804a0cc  name_ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2096		jz 1f
+
+$pc => 0x80494bb <code_INTERPRET+19>:	je     0x80494d3 <code_INTERPRET+43>
+$eax 0x0804a0cc  name_ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2099		mov %eax,%edi		// %edi = dictionary entry
+
+$pc => 0x80494bd <code_INTERPRET+21>:	mov    %eax,%edi
+$eax 0x0804a0cc  name_ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2100		movb 4(%edi),%al	// Get name+flags.
+
+$pc => 0x80494bf <code_INTERPRET+23>:	mov    0x4(%edi),%al
+$eax 0x0804a0cc  name_ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2101		push %ax		// Just save it for now.
+
+$pc => 0x80494c2 <code_INTERPRET+26>:	push   %ax
+$eax 0x0804a001  cold_start + 1
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+code_INTERPRET () at jonesforth.S:2102
+2102		call _TCFA		// Convert dictionary entry (in %edi) to codeword pointer.
+
+$pc => 0x80494c4 <code_INTERPRET+28>:	call   0x80493ec <_TCFA>
+$eax 0x0804a001  cold_start + 1
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e6:	29925377	8060928	65536	-881786880
+--------------------
+_TCFA () at jonesforth.S:1588
+1588		xor %eax,%eax
+
+$pc => 0x80493ec <_TCFA>:	xor    %eax,%eax
+$eax 0x0804a001  cold_start + 1
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1589		add $4,%edi		// Skip link pointer.
+
+$pc => 0x80493ee <_TCFA+2>:	add    $0x4,%edi
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1590		movb (%edi),%al		// Load flags+len into %al.
+
+$pc => 0x80493f1 <_TCFA+5>:	mov    (%edi),%al
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1591		inc %edi		// Skip flags+len byte.
+
+$pc => 0x80493f3 <_TCFA+7>:	inc    %edi
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1592		andb $F_LENMASK,%al	// Just the length, not the flags.
+
+$pc => 0x80493f4 <_TCFA+8>:	and    $0x1f,%al
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1593		add %eax,%edi		// Skip the name.
+
+$pc => 0x80493f6 <_TCFA+10>:	add    %eax,%edi
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1594		addl $3,%edi		// The codeword is 4-byte aligned.
+
+$pc => 0x80493f8 <_TCFA+12>:	add    $0x3,%edi
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1595		andl $~3,%edi
+
+$pc => 0x80493fb <_TCFA+15>:	and    $0xfffffffc,%edi
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+1596		ret
+
+$pc => 0x80493fe <_TCFA+18>:	ret    
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e2:	134517961	29925377	8060928	65536
+--------------------
+code_INTERPRET () at jonesforth.S:2103
+2103		pop %ax
+
+$pc => 0x80494c9 <code_INTERPRET+33>:	pop    %ax
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e6:	29925377	8060928	65536	-881786880
+--------------------
+code_INTERPRET () at jonesforth.S:2104
+2104		andb $F_IMMED,%al	// Is IMMED flag set?
+
+$pc => 0x80494cb <code_INTERPRET+35>:	and    $0x80,%al
+$eax 0x0000a001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2105		mov %edi,%eax
+
+$pc => 0x80494cd <code_INTERPRET+37>:	mov    %edi,%eax
+$eax 0x0000a000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2106		jnz 4f			// If IMMED, jump straight to executing.
+
+$pc => 0x80494cf <code_INTERPRET+39>:	jne    0x804950c <code_INTERPRET+100>
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2108		jmp 2f
+
+$pc => 0x80494d1 <code_INTERPRET+41>:	jmp    0x80494e9 <code_INTERPRET+65>
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2119		movl var_STATE,%edx
+
+$pc => 0x80494e9 <code_INTERPRET+65>:	mov    0x804b6d0,%edx
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2120		test %edx,%edx
+
+$pc => 0x80494ef <code_INTERPRET+71>:	test   %edx,%edx
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2121		jz 4f			// Jump if executing.
+
+$pc => 0x80494f1 <code_INTERPRET+73>:	je     0x804950c <code_INTERPRET+100>
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2133		mov interpret_is_lit,%ecx // Literal?
+
+$pc => 0x804950c <code_INTERPRET+100>:	mov    0x804b710,%ecx
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2134		test %ecx,%ecx		// Literal?
+
+$pc => 0x8049512 <code_INTERPRET+106>:	test   %ecx,%ecx
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2135		jnz 5f
+
+$pc => 0x8049514 <code_INTERPRET+108>:	jne    0x8049518 <code_INTERPRET+112>
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+2139		jmp *(%eax)
+
+$pc => 0x8049516 <code_INTERPRET+110>:	jmp    *(%eax)
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+code_ADD () at jonesforth.S:778
+778		pop %eax		// get top of stack
+
+$pc => 0x8049094 <code_ADD>:	pop    %eax
+$eax 0x0804a0d4  ADD
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	456	123	1	-13455
+--------------------
+code_ADD () at jonesforth.S:779
+779		addl %eax,(%esp)	// and add it to next word on stack
+
+$pc => 0x8049095 <code_ADD+1>:	add    %eax,(%esp)
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	123	1	-13455	0
+--------------------
+780		NEXT
+
+$pc => 0x8049098 <code_ADD+4>:	lods   %ds:(%esi),%eax
+$eax 0x000001c8
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+0x08049099	780		NEXT
+
+$pc => 0x8049099 <code_ADD+5>:	jmp    *(%eax)
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+code_BRANCH () at jonesforth.S:2028
+2028		add (%esi),%esi		// add the offset to the instruction pointer
+
+$pc => 0x804947b <code_BRANCH>:	add    (%esi),%esi
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a638  QUIT + 20
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+2029		NEXT
+
+$pc => 0x804947d <code_BRANCH+2>:	lods   %ds:(%esi),%eax
+$eax 0x0804a5e0  BRANCH
+$esi 0x0804a630  QUIT + 12
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+0x0804947e	2029		NEXT
+
+$pc => 0x804947e <code_BRANCH+3>:	jmp    *(%eax)
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+code_INTERPRET () at jonesforth.S:2089
+2089		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+
+$pc => 0x80494a8 <code_INTERPRET>:	call   0x804931d <_WORD>
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9ec:	579	1	-13455	0
+--------------------
+_WORD () at jonesforth.S:1371
+1371		call _KEY		// get next key, returned in %eax
+
+$pc => 0x804931d <_WORD>:	call   0x80492a4 <_KEY>
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e8:	134517933	579	1	-13455
+--------------------
+_KEY () at jonesforth.S:1272
+1272		mov (currkey),%ebx
+
+$pc => 0x80492a4 <_KEY>:	mov    0x804b6e4,%ebx
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1273		cmp (bufftop),%ebx
+
+$pc => 0x80492aa <_KEY+6>:	cmp    0x804b6e8,%ebx
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1274		jge 1f			// exhausted the input buffer?
+
+$pc => 0x80492b0 <_KEY+12>:	jge    0x80492be <_KEY+26>
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1282		xor %ebx,%ebx		// 1st param: stdin
+
+$pc => 0x80492be <_KEY+26>:	xor    %ebx,%ebx
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1283		mov $buffer,%ecx	// 2nd param: buffer
+
+$pc => 0x80492c0 <_KEY+28>:	mov    $0x804e000,%ecx
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1284		mov %ecx,currkey
+
+$pc => 0x80492c5 <_KEY+33>:	mov    %ecx,0x804b6e4
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1285		mov $BUFFER_SIZE,%edx	// 3rd param: max length
+
+$pc => 0x80492cb <_KEY+39>:	mov    $0x1000,%edx
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1286		mov $__NR_read,%eax	// syscall: read
+
+$pc => 0x80492d0 <_KEY+44>:	mov    $0x3,%eax
+$eax 0x0804a64c  INTERPRET
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1287		int $0x80
+
+$pc => 0x80492d5 <_KEY+49>:	int    $0x80
+$eax 0x00000003
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1288		test %eax,%eax		// If %eax <= 0, then exit.
+
+$pc => 0x80492d7 <_KEY+51>:	test   %eax,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1289		jbe 2f
+
+$pc => 0x80492d9 <_KEY+53>:	jbe    0x80492e5 <_KEY+65>
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1295		xor %ebx,%ebx
+
+$pc => 0x80492e5 <_KEY+65>:	xor    %ebx,%ebx
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1296		mov $__NR_exit,%eax	// syscall: exit
+
+$pc => 0x80492e7 <_KEY+67>:	mov    $0x1,%eax
+$eax 0x00000000
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+1297		int $0x80
+
+$pc => 0x80492ec <_KEY+72>:	int    $0x80
+$eax 0x00000001
+$esi 0x0804a634  QUIT + 16
+$esp 0xffffc9e4:	134517538	134517933	579	1
+--------------------
+[Inferior 1 (process 1089524) exited normally]
+
+``` 

@@ -4,6 +4,7 @@ BUILD_ID_NONE :=
 
 SHELL	:= /bin/bash
 TRACE_INPUT := .trace.input.f
+DEBUG_INPUT := .debug.input.f
 
 all:	jonesforth
 
@@ -16,10 +17,36 @@ run:
 run_exit:
 	cat jonesforth.f $(PROG) <(echo BYE) | ./jonesforth
 
+debug:
+	gdb -q ./jonesforth
+
+# Open GDB and let the user set breakpoints before running.
+debug_run: jonesforth
+	gdb -q ./jonesforth
+
+# Convenience: break at _start, preload jonesforth.f, then keep stdin interactive.
+debug_run_start: jonesforth
+	gdb -q -ex "break _start" -ex "run < <(cat jonesforth.f -)" ./jonesforth
+
+debug_prog: jonesforth
+	@test -n "$(PROG)" || (echo "Usage: make debug_prog PROG=examples/add.f" && exit 1)
+	@cat jonesforth.f $(PROG) <(echo BYE) > $(DEBUG_INPUT)
+	gdb -q -ex "break _start" -ex "run < $(DEBUG_INPUT)" ./jonesforth
+
 trace: jonesforth gdb/trace.gdb
 	@test -n "$(PROG)" || (echo "Usage: make trace PROG=examples/add.f" && exit 1)
-	@cat jonesforth.f $(PROG) <(echo BYE) > $(TRACE_INPUT)
+	@{ cat jonesforth.f; \
+	   echo ': __TRACE_GATE__ ; __TRACE_GATE__'; \
+	   cat $(PROG); \
+	   echo; \
+	   echo BYE; } > $(TRACE_INPUT)
 	gdb -q -x gdb/trace.gdb ./jonesforth
+	$(MAKE) trace-norm
+
+trace_core: jonesforth gdb/trace-core.gdb
+	@test -n "$(PROG)" || (echo "Usage: make trace_core PROG=examples/core-add.f" && exit 1)
+	@{ cat $(PROG); echo; } > $(TRACE_INPUT)
+	gdb -q -x gdb/trace-core.gdb ./jonesforth
 	$(MAKE) trace-norm
 
 trace-norm:
@@ -27,7 +54,7 @@ trace-norm:
 	perl -pe 's/\b0x([0-9a-fA-F]{7})\b/"0x0$$1"/ge' trace.md > trace.norm.md
 
 clean:
-	rm -f jonesforth perf_dupdrop *~ core .test_* trace.md trace.norm.md $(TRACE_INPUT)
+	rm -f jonesforth perf_dupdrop *~ core .test_* trace.md trace.norm.md $(TRACE_INPUT) $(DEBUG_INPUT)
 
 # Tests.
 
@@ -54,4 +81,4 @@ run_perf_dupdrop: jonesforth
 	cat <(echo ': TEST-MODE ;') jonesforth.f perf_dupdrop.f | ./jonesforth
 
 .SUFFIXES: .f .test
-.PHONY: test check run run_exit trace trace-norm run_perf_dupdrop
+.PHONY: test check run run_exit debug debug_run debug_run_start debug_prog trace trace_core trace-norm run_perf_dupdrop

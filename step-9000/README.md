@@ -39,6 +39,12 @@ cat jonesforth.f examples/add.f - | ./jonesforth
 make run_exit PROG=examples/add.f
 ```
 
+# Debug an example program
+
+```
+make debug_prog PROG=examples/add.f
+```
+
 # Trace an example program
 
 ```
@@ -57,6 +63,7 @@ make clean
 make 
 make run
 make run_exit PROG=examples/add.f
+make debug_prog PROG=examples/add.f
 make trace PROG=examples/add.f
 make test
 ```
