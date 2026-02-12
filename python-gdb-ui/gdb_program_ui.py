@@ -96,6 +96,14 @@ def symbol_desc_at(addr: int) -> str:
     return info.split(" in section", 1)[0].strip()
 
 
+def try_read_uint(addr: int, width_bytes: int) -> int | None:
+    try:
+        mem = gdb.selected_inferior().read_memory(addr, width_bytes)
+    except gdb.MemoryError:
+        return None
+    return int.from_bytes(bytes(mem), byteorder="little", signed=False)
+
+
 def load_label_overrides(path: str | None) -> dict[int, str]:
     if not path:
         return {}
@@ -549,23 +557,36 @@ class UiRegCommand(gdb.Command):
             raise gdb.GdbError("Usage: ui-reg <reg> [reg ...]")
 
         ptr_w = pointer_size_bytes()
-        rows: list[tuple[str, str, str]] = []
+        rows: list[tuple[str, str, str, str]] = []
 
         for reg in argv:
             reg_name = reg if reg.startswith("$") else f"${reg}"
             value = eval_uint(reg_name)
             value_s = format_hex(value, ptr_w)
             label = symbol_desc_at(value)
-            rows.append((reg_name, value_s, label))
+            deref = ""
+            pointee = try_read_uint(value, ptr_w)
+            if pointee is not None:
+                pointee_s = format_hex(pointee, ptr_w)
+                pointee_label = symbol_desc_at(pointee)
+                deref = f"-> {pointee_s}"
+                if pointee_label:
+                    deref += f" {pointee_label}"
+            rows.append((reg_name, value_s, label, deref))
 
         reg_w = max(len(r[0]) for r in rows)
         val_w = max(len(r[1]) for r in rows)
+        lbl_w = max(len(r[2]) for r in rows)
 
         lines: list[str] = []
-        for reg_name, value_s, label in rows:
+        for reg_name, value_s, label, deref in rows:
             line = f"{reg_name:<{reg_w}} {value_s:<{val_w}}"
-            if label:
+            if lbl_w > 0:
+                line += f"  {label:<{lbl_w}}"
+            elif label:
                 line += f"  {label}"
+            if deref:
+                line += f"  {deref}"
             lines.append(line)
 
         gdb.write("\n".join(lines) + "\n")

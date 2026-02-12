@@ -74,7 +74,7 @@ Defaults:
 - `ui-sections` prints `.text`, `.rodata`, and `.data` together with shared column alignment.
 - In `ui-sections`, missing `.rodata` or `.data` is shown as `(section not found)`.
 - `ui-sections --md` emits markdown headings + fenced code blocks for easy folding in markdown files.
-- `ui-reg` prints register values and appends symbol labels when values resolve to symbols.
+- `ui-reg` prints register values, appends symbol labels, and when register values point to readable memory shows `-> <pointee> <label>`.
 
 Compatibility aliases:
 
