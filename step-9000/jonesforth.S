@@ -4,8 +4,7 @@
 	$Id: jonesforth.S,v 1.47 2009-09-11 08:33:13 rich Exp $	
 */
 	.set JONES_VERSION,47
-/*
-	INTRODUCTION ----------------------------------------------------------------------
+/*  INTRODUCTION ----------------------------------------------------------------------
 
 	FORTH is one of those alien languages which most working programmers regard in the same
 	way as Haskell, LISP, and so on.  Something so strange that they'd rather any thoughts
@@ -66,9 +65,9 @@
 
 	Here is another "Why FORTH?" essay: http://www.jwdt.com/~paysan/why-forth.html
 
-	Discussion and criticism of this FORTH here: http://lambda-the-ultimate.org/node/2452
+	Discussion and criticism of this FORTH here: http://lambda-the-ultimate.org/node/2452 */
 
-	ACKNOWLEDGEMENTS ----------------------------------------------------------------------
+/*	ACKNOWLEDGEMENTS ----------------------------------------------------------------------
 
 	This code draws heavily on the design of LINA FORTH (http://home.hccnet.nl/a.w.m.van.der.horst/lina.html)
 	by Albert van der Horst.  Any similarities in the code are probably not accidental.
@@ -80,16 +79,17 @@
 
 	And finally I'd like to acknowledge the (possibly forgotten?) authors of ARTIC FORTH because their
 	original program which I still have on original cassette tape kept nagging away at me all these years.
-	http://en.wikipedia.org/wiki/Artic_Software
+	http://en.wikipedia.org/wiki/Artic_Software */
 
-	PUBLIC DOMAIN ----------------------------------------------------------------------
+
+/*	PUBLIC DOMAIN ----------------------------------------------------------------------
 
 	I, the copyright holder of this work, hereby release it into the public domain. This applies worldwide.
 
 	In case this is not legally possible, I grant any entity the right to use this work for any purpose,
-	without any conditions, unless such conditions are required by law.
+	without any conditions, unless such conditions are required by law. */
 
-	SETTING UP ----------------------------------------------------------------------
+/*	SETTING UP ----------------------------------------------------------------------
 
 	Let's get a few housekeeping things out of the way.  Firstly because I need to draw lots of
 	ASCII-art diagrams to explain concepts, the best way to look at this is using a window which
@@ -104,9 +104,9 @@
 	        |
 	    	|
 
-	Thirdly I assume that your screen is at least 50 characters high.
+	Thirdly I assume that your screen is at least 50 characters high. */
 
-	ASSEMBLING ----------------------------------------------------------------------
+/*	ASSEMBLING ----------------------------------------------------------------------
 
 	If you want to actually run this FORTH, rather than just read it, you will need Linux on an
 	i386.  Linux because instead of programming directly to the hardware on a bare PC which I
@@ -128,9 +128,11 @@
 
 	If you want to load your own FORTH code and then continue reading user commands, you can do:
 
-	cat jonesforth.f myfunctions.f - | ./jonesforth
+	cat jonesforth.f myfunctions.f - | ./jonesforth 
+	
+	*/
 
-	ASSEMBLER ----------------------------------------------------------------------
+/*	ASSEMBLER ----------------------------------------------------------------------
 
 	(You can just skip to the next section -- you don't need to be able to read assembler to
 	follow this tutorial).
@@ -161,7 +163,9 @@
 
 	Now the tutorial starts in earnest.
 
-	THE DICTIONARY ----------------------------------------------------------------------
+	*/	
+
+/*	THE DICTIONARY ----------------------------------------------------------------------
 
 	In FORTH as you will know, functions are called "words", and just as in other languages they
 	have a name and a definition.  Here are two FORTH words:
@@ -222,7 +226,9 @@
 	understand below, words defined using the old definition of a word continue to use
 	the old definition.  Only words defined after the new definition use the new definition.
 
-	DIRECT THREADED CODE ----------------------------------------------------------------------
+    */
+
+/*	DIRECT THREADED CODE ----------------------------------------------------------------------
 
 	Now we'll get to the really crucial bit in understanding FORTH, so go and get a cup of tea
 	or coffee and settle down.  It's fair to say that if you don't understand this section, then you
@@ -298,7 +304,7 @@
 	which literally make the jump to the next subroutine.
 
 	And that brings us to our first piece of actual code!  Well, it's a macro.
-*/
+	*/	
 
 /* NEXT macro. */
 	.macro NEXT
@@ -328,7 +334,9 @@
 
 	I lied about JMP *(%eax).  
 
-	INDIRECT THREADED CODE ----------------------------------------------------------------------
+	*/
+
+/*	INDIRECT THREADED CODE ----------------------------------------------------------------------
 
 	It turns out that direct threaded code is interesting but only if you want to just execute
 	a list of functions written in assembly language.  So QUADRUPLE would work only if DOUBLE
