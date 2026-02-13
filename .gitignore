@@ -1,3 +1,6 @@
 step-0000/.gdb_history
 step-0000/trace.norm.txt~
 step-0000/archive
+
+.trace*
+step-9000/.trace*
