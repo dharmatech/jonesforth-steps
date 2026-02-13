@@ -6,6 +6,7 @@ Generic commands:
 - ui-data [start_expr] [end_expr] [--labels FILE] [--word-size N]
 - ui-sections [--labels FILE] [--word-size N] [--md]
 - ui-reg <reg> [reg ...]
+- ui-mem <expr> [expr ...]
 
 Compatibility aliases:
 - ui-words ...  (alias of ui-rodata)
@@ -592,6 +593,59 @@ class UiRegCommand(gdb.Command):
         gdb.write("\n".join(lines) + "\n")
 
 
+class UiMemCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("ui-mem", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = from_tty
+        argv = gdb.string_to_argv(arg)
+        if not argv:
+            raise gdb.GdbError("Usage: ui-mem <expr> [expr ...]")
+
+        ptr_w = pointer_size_bytes()
+        rows: list[tuple[str, str, str, str, str]] = []
+
+        for expr in argv:
+            addr = eval_uint(expr)
+            addr_s = format_hex(addr, ptr_w)
+            value = try_read_uint(addr, ptr_w)
+            if value is None:
+                rows.append((expr, addr_s, "(unreadable)", "", ""))
+                continue
+
+            value_s = format_hex(value, ptr_w)
+            value_label = symbol_desc_at(value)
+            deref = ""
+            pointee = try_read_uint(value, ptr_w)
+            if pointee is not None:
+                pointee_s = format_hex(pointee, ptr_w)
+                pointee_label = symbol_desc_at(pointee)
+                deref = f"-> {pointee_s}"
+                if pointee_label:
+                    deref += f" {pointee_label}"
+
+            rows.append((expr, addr_s, value_s, value_label, deref))
+
+        name_w = max(len(r[0]) for r in rows)
+        addr_w = max(len(r[1]) for r in rows)
+        val_w = max(len(r[2]) for r in rows)
+        lbl_w = max(len(r[3]) for r in rows)
+
+        lines: list[str] = []
+        for name, addr_s, value_s, value_label, deref in rows:
+            line = f"{name:<{name_w}}  {addr_s:<{addr_w}}  {value_s:<{val_w}}"
+            if lbl_w > 0:
+                line += f"  {value_label:<{lbl_w}}"
+            elif value_label:
+                line += f"  {value_label}"
+            if deref:
+                line += f"  {deref}"
+            lines.append(line)
+
+        gdb.write("\n".join(lines) + "\n")
+
+
 class AliasUiWordsCommand(gdb.Command):
     def __init__(self) -> None:
         super().__init__("ui-words", gdb.COMMAND_DATA)
@@ -606,4 +660,5 @@ UiWordsCommand()
 UiDataCommand()
 UiSectionsCommand()
 UiRegCommand()
+UiMemCommand()
 AliasUiWordsCommand()

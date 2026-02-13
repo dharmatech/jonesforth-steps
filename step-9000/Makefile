@@ -33,6 +33,30 @@ debug_prog: jonesforth
 	@cat jonesforth.f $(PROG) <(echo BYE) > $(DEBUG_INPUT)
 	gdb -q -ex "break _start" -ex "run < $(DEBUG_INPUT)" ./jonesforth
 
+tmux_run_gdb: jonesforth
+	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
+	@command -v gdb >/dev/null || (echo "gdb not found" && exit 1)
+	@OLD_PIDS="$$(pgrep -x jonesforth 2>/dev/null | tr '\n' ' ')"; \
+	SESSION="jonesdbg-$$RANDOM"; \
+	tmux new-session -d -s "$$SESSION" -n "dbg" "bash -lc 'make -C $(CURDIR) run PROG=\"$(PROG)\"'"; \
+	tmux set-option -t "$$SESSION" -g mouse on; \
+	tmux split-window -h -t "$$SESSION:0"; \
+	tmux send-keys -t "$$SESSION:0.1" "bash -lc 'OLD_PIDS=\"$$OLD_PIDS\"; while true; do for PID in \$$(pgrep -x jonesforth 2>/dev/null); do case \" $$OLD_PIDS \" in *\" \$$PID \"*) ;; *) exec gdb -q -p \$$PID ;; esac; done; sleep 0.05; done'" C-m; \
+	tmux select-layout -t "$$SESSION:0" even-horizontal; \
+	tmux attach -t "$$SESSION"
+
+tmux_trace_loop: jonesforth gdb/trace-loop.gdb
+	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
+	@command -v gdb >/dev/null || (echo "gdb not found" && exit 1)
+	@OLD_PIDS="$$(pgrep -x jonesforth 2>/dev/null | tr '\n' ' ')"; \
+	SESSION="jonesdbg-$$RANDOM"; \
+	tmux new-session -d -s "$$SESSION" -n "dbg" "bash -lc 'make -C $(CURDIR) run PROG=\"$(PROG)\"'"; \
+	tmux set-option -t "$$SESSION" -g mouse on; \
+	tmux split-window -h -t "$$SESSION:0"; \
+	tmux send-keys -t "$$SESSION:0.1" "bash -lc 'OLD_PIDS=\"$$OLD_PIDS\"; while true; do for PID in \$$(pgrep -x jonesforth 2>/dev/null); do case \" $$OLD_PIDS \" in *\" \$$PID \"*) ;; *) exec gdb -q -ex \"source $(CURDIR)/gdb/trace-loop.gdb\" -ex \"trace-loop\" -p \$$PID ;; esac; done; sleep 0.05; done'" C-m; \
+	tmux select-layout -t "$$SESSION:0" even-horizontal; \
+	tmux attach -t "$$SESSION"
+
 trace: jonesforth gdb/trace.gdb
 	@test -n "$(PROG)" || (echo "Usage: make trace PROG=examples/add.f" && exit 1)
 	@{ cat jonesforth.f; \
@@ -81,4 +105,4 @@ run_perf_dupdrop: jonesforth
 	cat <(echo ': TEST-MODE ;') jonesforth.f perf_dupdrop.f | ./jonesforth
 
 .SUFFIXES: .f .test
-.PHONY: test check run run_exit debug debug_run debug_run_start debug_prog trace trace_core trace-norm run_perf_dupdrop
+.PHONY: test check run run_exit debug debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace trace_core trace-norm run_perf_dupdrop

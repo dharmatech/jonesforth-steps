@@ -54,9 +54,21 @@ while $n > 0 && $_isvoid($_exitcode)
         echo $pc \ 
         x/i $pc
         ui-reg eax
+        ui-reg ebx
         ui-reg esi
+        echo $edi \ 
+        x/4dw $edi
         echo $esp \ 
         x/4dw $esp
+
+        ui-mem &currkey
+        ui-mem &bufftop
+        echo &return_stack     \ 
+        x/3xw &return_stack
+        echo &return_stack_top \ 
+        x/3xw &return_stack_top
+        echo &buffer           \ 
+        x/3xw &buffer
     end
     set $n = $n - 1
 end
