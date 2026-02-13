@@ -40,9 +40,10 @@ ui-sections --md
 echo \n
 echo # Single Stepping \n
 echo ``` \n
+
 # Trace gate: skip startup and begin at first token-processing entry.
-tbreak *((unsigned int)code_INTERPRET + 5)
-continue
+# tbreak *((unsigned int)code_INTERPRET + 5)
+# continue
 
 # Max traced instructions after hitting trace gate.
 set $n = 10000
@@ -56,8 +57,16 @@ while $n > 0 && $_isvoid($_exitcode)
         ui-reg eax
         ui-reg ebx
         ui-reg esi
-        echo $edi \ 
-        x/4dw $edi
+
+        # if $edi >= 0x08000000
+        #     echo $edi \ 
+        #     x/4dw $edi
+        # end
+
+        # x/4dw $edi
+
+        ui-reg edi
+
         echo $esp \ 
         x/4dw $esp
 
