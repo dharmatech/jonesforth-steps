@@ -1,7 +1,6 @@
 /*	A sometimes minimal FORTH compiler and tutorial for Linux / i386 systems. -*- asm -*-
 	By Richard W.M. Jones <rich@annexia.org> http://annexia.org/forth
 	This is PUBLIC DOMAIN (see public domain release statement below).
-	$Id: jonesforth.S,v 1.47 2009-09-11 08:33:13 rich Exp $	
 */
 	.set JONES_VERSION,47
 /*  INTRODUCTION ----------------------------------------------------------------------
@@ -443,9 +442,9 @@
 	you call into a function, ie. how does %esi start off pointing at part of QUADRUPLE, but
 	then point at part of DOUBLE.  (3) What goes in the codeword for the words which are written
 	in FORTH?  (4) How do you compile a function which does anything except call other functions
-	ie. a function which contains a number like : DOUBLE 2 * ; ?
+	ie. a function which contains a number like : DOUBLE 2 * ; ? */
 
-	THE INTERPRETER AND RETURN STACK ------------------------------------------------------------
+/*	THE INTERPRETER AND RETURN STACK ------------------------------------------------------------
 
 	Going at these in no particular order, let's talk about issues (3) and (2), the interpreter
 	and the return stack.
@@ -487,8 +486,7 @@
 	lea 4(%ebp),%ebp
 	.endm
 
-/*
-	And with that we can now talk about the interpreter.
+/*      And with that we can now talk about the interpreter.
 
 	In FORTH the interpreter function is often called DOCOL (I think it means "DO COLON" because
 	all FORTH definitions start with a colon, as in : DOUBLE DUP + ;
@@ -510,8 +508,7 @@ DOCOL:
 	movl %eax,%esi		// %esi point to first data word
 	NEXT
 
-/*
-	Just to make this absolutely clear, let's see how DOCOL works when jumping from QUADRUPLE
+/*      Just to make this absolutely clear, let's see how DOCOL works when jumping from QUADRUPLE
 	into DOUBLE:
 
 		QUADRUPLE:
@@ -529,16 +526,16 @@ DOCOL:
 	pushes the old %esi on the return stack.  %eax points to the codeword of DOUBLE, so we
 	just add 4 on to it to get our new %esi:
 
-		QUADRUPLE:
-		+------------------+
-		| codeword         |
-		+------------------+		   DOUBLE:
-		| addr of DOUBLE  ---------------> +------------------+
-top of return	+------------------+       %eax -> | addr of DOCOL    |
-stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
-		+------------------+	   %esi -> | addr of DUP      |
-		| addr of EXIT	   |		   +------------------+
-		+------------------+               | etc.             |
+                        QUADRUPLE:
+                        +------------------+
+                        | codeword         |
+                        +------------------+               DOUBLE:
+                        | addr of DOUBLE  ---------------> +------------------+
+        top of return   +------------------+       %eax -> | addr of DOCOL    |
+        stack points -> | addr of DOUBLE   |       + 4 =   +------------------+
+                        +------------------+       %esi -> | addr of DUP      |
+                        | addr of EXIT     |               +------------------+
+                        +------------------+               | etc.             |
 
 	Then we do NEXT, and because of the magic of threaded code that increments %esi again
 	and calls DUP.
@@ -549,9 +546,9 @@ stack points ->	| addr of DOUBLE   |	   + 4 =   +------------------+
 	in this file (the others were just macros), and because I usually compile this code with the
 	text segment starting at address 0, DOCOL has address 0.  So if you are disassembling the
 	code and see a word with a codeword of 0, you will immediately know that the word is
-	written in FORTH (it's not an assembler primitive) and so uses DOCOL as the interpreter.
+	written in FORTH (it's not an assembler primitive) and so uses DOCOL as the interpreter. */
 
-	STARTING UP ----------------------------------------------------------------------
+/*	STARTING UP ----------------------------------------------------------------------
 
 	Now let's get down to nuts and bolts.  When we start the program we need to set up
 	a few things like the return stack.  But as soon as we can, we want to jump into FORTH
@@ -582,8 +579,7 @@ _start:
 cold_start:			// High-level code without a codeword.
 	.int QUIT
 
-/*
-	BUILT-IN WORDS ----------------------------------------------------------------------
+/*      BUILT-IN WORDS ----------------------------------------------------------------------
 
 	Remember our dictionary entries (headers)?  Let's bring those together with the codeword
 	and data words to see how : DOUBLE DUP + ; really looks in memory.
@@ -606,14 +602,14 @@ cold_start:			// High-level code without a codeword.
 
 	The long way would be:
 
-	.int <link to previous word>
-	.byte 6			// len
-	.ascii "DOUBLE"		// string
-	.byte 0			// padding
-DOUBLE: .int DOCOL		// codeword
-	.int DUP		// pointer to codeword of DUP
-	.int PLUS		// pointer to codeword of +
-	.int EXIT		// pointer to codeword of EXIT
+            .int <link to previous word>
+            .byte 6                     // len
+            .ascii "DOUBLE"             // string
+            .byte 0                     // padding
+    DOUBLE: .int DOCOL                  // codeword
+            .int DUP                    // pointer to codeword of DUP
+            .int PLUS                   // pointer to codeword of +
+            .int EXIT                   // pointer to codeword of EXIT
 
 	That's going to get quite tedious rather quickly, so here I define an assembler macro
 	so that I can just write:
@@ -650,8 +646,7 @@ name_\label :
 	// list of word pointers follow
 	.endm
 
-/*
-	Similarly I want a way to write words written in assembly language.  There will be quite a few
+/*      Similarly I want a way to write words written in assembly language.  There will be quite a few
 	of these to start with because, well, everything has to start in assembly before there's
 	enough "infrastructure" to be able to start writing FORTH words, but also I want to define
 	some common FORTH words in assembly language for speed, even though I could write them in FORTH.
@@ -691,8 +686,7 @@ name_\label :
 code_\label :			// assembler code follows
 	.endm
 
-/*
-	Now some easy FORTH primitives.  These are written in assembly for speed.  If you understand
+/*      Now some easy FORTH primitives.  These are written in assembly for speed.  If you understand
 	i386 assembly language then it is worth reading these.  However if you don't understand assembly
 	you can skip the details.
 */
@@ -799,8 +793,7 @@ code_\label :			// assembler code follows
 	push %eax		// ignore overflow
 	NEXT
 
-/*
-	In this FORTH, only /MOD is primitive.  Later we will define the / and MOD words in
+/*      In this FORTH, only /MOD is primitive.  Later we will define the / and MOD words in
 	terms of the primitive /MOD.  The design of the i386 assembly instruction idiv which
 	leaves both quotient and remainder makes this the obvious choice.
 */
@@ -814,8 +807,7 @@ code_\label :			// assembler code follows
 	push %eax		// push quotient
 	NEXT
 
-/*
-	Lots of comparison operations like =, <, >, etc..
+/*      Lots of comparison operations like =, <, >, etc..
 
 	ANS FORTH says that the comparison words should return all (binary) 1's for
 	TRUE and all 0's for FALSE.  However this is a bit of a strange convention
@@ -823,14 +815,14 @@ code_\label :			// assembler code follows
 	1 meaning TRUE and 0 meaning FALSE.
 */
 
-	defcode "=",1,,EQU	// top two words are equal?
-	pop %eax
-	pop %ebx
-	cmp %ebx,%eax
-	sete %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
+        defcode "=",1,,EQU	// top two words are equal?
+        pop %eax
+        pop %ebx
+        cmp %ebx,%eax
+        sete %al
+        movzbl %al,%eax
+        pushl %eax
+        NEXT
 
 	defcode "<>",2,,NEQU	// top two words are not equal?
 	pop %eax
@@ -944,8 +936,7 @@ code_\label :			// assembler code follows
 	notl (%esp)
 	NEXT
 
-/*
-	RETURNING FROM FORTH WORDS ----------------------------------------------------------------------
+/*      RETURNING FROM FORTH WORDS ----------------------------------------------------------------------
 
 	Time to talk about what happens when we EXIT a function.  In this diagram QUADRUPLE has called
 	DOUBLE, and DOUBLE is about to exit (look at where %esi is pointing):
@@ -964,15 +955,14 @@ code_\label :			// assembler code follows
 					   %esi -> | addr of EXIT     |
 						   +------------------+
 
-	What happens when the + function does NEXT?  Well, the following code is executed.
+	What happens when the + function does NEXT?  Well, the following code is executed. 
 */
-
+     
 	defcode "EXIT",4,,EXIT
 	POPRSP %esi		// pop return stack into %esi
 	NEXT
 
-/*
-	EXIT gets the old %esi which we saved from before on the return stack, and puts it in %esi.
+/*      EXIT gets the old %esi which we saved from before on the return stack, and puts it in %esi.
 	So after this (but just before NEXT) we get:
 
 		QUADRUPLE
@@ -989,9 +979,10 @@ code_\label :			// assembler code follows
 						   | addr of EXIT     |
 						   +------------------+
 
-	And NEXT just completes the job by, well, in this case just by calling DOUBLE again :-)
+	And NEXT just completes the job by, well, in this case just by calling DOUBLE again :-) */
 
-	LITERALS ----------------------------------------------------------------------
+
+/*	LITERALS ----------------------------------------------------------------------
 
 	The final point I "glossed over" before was how to deal with functions that do anything
 	apart from calling other functions.  For example, suppose that DOUBLE was defined like this:
@@ -1025,19 +1016,18 @@ code_\label :			// assembler code follows
 	push %eax		// push the literal number on to stack
 	NEXT
 
-/*
-	MEMORY ----------------------------------------------------------------------
+/*      MEMORY ----------------------------------------------------------------------
 
 	An important point about FORTH is that it gives you direct access to the lowest levels
 	of the machine.  Manipulating memory directly is done frequently in FORTH, and these are
 	the primitive words for doing it.
 */
 
-	defcode "!",1,,STORE
-	pop %ebx		// address to store at
-	pop %eax		// data to store there
-	mov %eax,(%ebx)		// store it
-	NEXT
+        defcode "!",1,,STORE
+            pop %ebx            // address to store at
+            pop %eax            // data to store there
+            mov %eax,(%ebx)     // store it
+            NEXT
 
 	defcode "@",1,,FETCH
 	pop %ebx		// address to fetch
@@ -1057,12 +1047,11 @@ code_\label :			// assembler code follows
 	subl %eax,(%ebx)	// add it
 	NEXT
 
-/*
-	! and @ (STORE and FETCH) store 32-bit words.  It's also useful to be able to read and write bytes
+/*      ! and @ (STORE and FETCH) store 32-bit words.  It's also useful to be able to read and write bytes
 	so we also define standard words C@ and C!.
 
 	Byte-oriented operations only work on architectures which permit them (i386 is one of those).
- */
+*/
 
 	defcode "C!",2,,STOREBYTE
 	pop %ebx		// address to store at
@@ -1097,8 +1086,7 @@ code_\label :			// assembler code follows
 	mov %edx,%esi		// restore %esi
 	NEXT
 
-/*
-	BUILT-IN VARIABLES ----------------------------------------------------------------------
+/*      BUILT-IN VARIABLES ----------------------------------------------------------------------
 
 	These are some built-in variables and related standard FORTH words.  Of these, the only one that we
 	have discussed so far was LATEST, which points to the last (most recently defined) word in the
@@ -1122,8 +1110,7 @@ var_\name :
 	.int \initial
 	.endm
 
-/*
-	The built-in variables are:
+/*      The built-in variables are:
 
 	STATE		Is the interpreter executing code (0) or compiling a word (non-zero)?
 	LATEST		Points to the latest (most recently defined) word in the dictionary.
@@ -1138,8 +1125,7 @@ var_\name :
 	defvar "S0",2,,SZ
 	defvar "BASE",4,,BASE,10
 
-/*
-	BUILT-IN CONSTANTS ----------------------------------------------------------------------
+/*      BUILT-IN CONSTANTS ----------------------------------------------------------------------
 
 	It's also useful to expose a few constants to FORTH.  When the word is executed it pushes a
 	constant value on the stack.
@@ -1189,8 +1175,7 @@ var_\name :
 	defconst "O_APPEND",8,,__O_APPEND,02000
 	defconst "O_NONBLOCK",10,,__O_NONBLOCK,04000
 
-/*
-	RETURN STACK ----------------------------------------------------------------------
+/*      RETURN STACK ----------------------------------------------------------------------
 
 	These words allow you to access the return stack.  Recall that the register %ebp always points to
 	the top of the return stack.
@@ -1218,8 +1203,7 @@ var_\name :
 	addl $4,%ebp		// pop return stack and throw away
 	NEXT
 
-/*
-	PARAMETER (DATA) STACK ----------------------------------------------------------------------
+/*      PARAMETER (DATA) STACK ----------------------------------------------------------------------
 
 	These functions allow you to manipulate the parameter stack.  Recall that Linux sets up the parameter
 	stack for us, and it is accessed through %esp.
@@ -1234,7 +1218,7 @@ var_\name :
 	pop %esp
 	NEXT
 
-/* INPUT AND OUTPUT ----------------------------------------------------------------------
+/*      INPUT AND OUTPUT ----------------------------------------------------------------------
 
 	These are our first really meaty/complicated FORTH primitives.  I have chosen to write them in
 	assembler, but surprisingly in "real" FORTH implementations these are often written in terms
@@ -1258,7 +1242,7 @@ var_\name :
 	it automatically.  The other thing that KEY does is if it detects that stdin has closed, it
 	exits the program, which is why when you hit ^D the FORTH system cleanly exits.
 
- buffer                           bufftop
+      buffer                           bufftop
 	|                                |
 	V                                V
 	+-------------------------------+--------------------------------------+
@@ -1337,8 +1321,7 @@ _EMIT:
 emit_scratch:
 	.space 1		// scratch used by EMIT
 
-/*
-	Back to input, WORD is a FORTH word which reads the next full word of input.
+/*      Back to input, WORD is a FORTH word which reads the next full word of input.
 
 	What it does in detail is that it first skips any blanks (spaces, tabs, newlines and so on).
 	Then it calls KEY to read characters into an internal buffer until it hits a blank.  Then it

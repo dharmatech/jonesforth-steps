@@ -14,26 +14,26 @@ jonesforth: jonesforth.S
 run:
 	cat jonesforth.f $(PROG) - | ./jonesforth
 
-run_exit:
+run-exit:
 	cat jonesforth.f $(PROG) <(echo BYE) | ./jonesforth
 
 debug:
 	gdb -q ./jonesforth
 
 # Open GDB and let the user set breakpoints before running.
-debug_run: jonesforth
+debug-run: jonesforth
 	gdb -q ./jonesforth
 
 # Convenience: break at _start, preload jonesforth.f, then keep stdin interactive.
-debug_run_start: jonesforth
+debug-run-start: jonesforth
 	gdb -q -ex "break _start" -ex "run < <(cat jonesforth.f -)" ./jonesforth
 
-debug_prog: jonesforth
-	@test -n "$(PROG)" || (echo "Usage: make debug_prog PROG=examples/add.f" && exit 1)
+debug-prog: jonesforth
+	@test -n "$(PROG)" || (echo "Usage: make debug-prog PROG=examples/add.f" && exit 1)
 	@cat jonesforth.f $(PROG) <(echo BYE) > $(DEBUG_INPUT)
 	gdb -q -ex "break _start" -ex "run < $(DEBUG_INPUT)" ./jonesforth
 
-tmux_run_gdb: jonesforth
+tmux-run-gdb: jonesforth
 	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
 	@command -v gdb >/dev/null || (echo "gdb not found" && exit 1)
 	@OLD_PIDS="$$(pgrep -x jonesforth 2>/dev/null | tr '\n' ' ')"; \
@@ -45,7 +45,7 @@ tmux_run_gdb: jonesforth
 	tmux select-layout -t "$$SESSION:0" even-horizontal; \
 	tmux attach -t "$$SESSION"
 
-tmux_trace_loop: jonesforth gdb/trace-loop.gdb
+tmux-trace-loop: jonesforth gdb/trace-loop.gdb
 	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
 	@command -v gdb >/dev/null || (echo "gdb not found" && exit 1)
 	@OLD_PIDS="$$(pgrep -x jonesforth 2>/dev/null | tr '\n' ' ')"; \
@@ -66,19 +66,36 @@ trace: jonesforth gdb/trace.gdb
 	   echo BYE; } > $(TRACE_INPUT)
 	gdb -q -x gdb/trace.gdb ./jonesforth
 	$(MAKE) trace-norm
+	$(MAKE) trace-tree
 
-trace_core: jonesforth gdb/trace-core.gdb
-	@test -n "$(PROG)" || (echo "Usage: make trace_core PROG=examples/core-add.f" && exit 1)
+trace-core: jonesforth gdb/trace-core.gdb
+	@test -n "$(PROG)" || (echo "Usage: make trace-core PROG=examples/core-add.f" && exit 1)
 	@{ cat $(PROG); echo; } > $(TRACE_INPUT)
 	gdb -q -x gdb/trace-core.gdb ./jonesforth
 	$(MAKE) trace-norm
+	$(MAKE) trace-tree
 
 trace-norm:
 	@test -f trace.md || (echo "trace.md not found; run 'make trace PROG=...' first." && exit 1)
 	perl -pe 's/\b0x([0-9a-fA-F]{7})\b/"0x0$$1"/ge' trace.md > trace.norm.md
 
+trace-tree:
+	@test -f trace.norm.md || (echo "trace.norm.md not found; run 'make trace-norm' first." && exit 1)
+	./scripts/trace-headings.py trace.norm.md trace.tree.md
+
+trace-org: trace-tree
+	@command -v pandoc >/dev/null || (echo "pandoc not found; install pandoc to build trace.tree.org" && exit 1)
+	{ printf '#+STARTUP: overview\n'; \
+	  pandoc trace.tree.md --from markdown --to org | \
+	    perl -0pe 's/^[ \t]*:PROPERTIES:\n(?:^[ \t]*:.*\n)*?^[ \t]*:END:\n?//mg'; \
+	} > trace.tree.org
+
+# trace-org: trace-tree
+# 	@command -v pandoc >/dev/null || (echo "pandoc not found; install pandoc to build trace.tree.org" && exit 1)
+# 	{ printf '#+STARTUP: overview\n'; pandoc trace.tree.md --from markdown --to org; } > trace.tree.org
+
 clean:
-	rm -f jonesforth perf_dupdrop *~ core .test_* trace.md trace.norm.md $(TRACE_INPUT) $(DEBUG_INPUT)
+	rm -f jonesforth perf_dupdrop *~ core .test_* trace.md trace.norm.md trace.tree.md trace.tree.org $(TRACE_INPUT) $(DEBUG_INPUT)
 
 # Tests.
 
@@ -101,8 +118,18 @@ test_%.test: tests/test_%.f jonesforth
 perf_dupdrop: perf_dupdrop.c
 	gcc -m32 -O3 -Wall -Werror -o $@ $<
 
-run_perf_dupdrop: jonesforth
+run-perf-dupdrop: jonesforth
 	cat <(echo ': TEST-MODE ;') jonesforth.f perf_dupdrop.f | ./jonesforth
 
+# Backward-compatible aliases.
+run_exit: run-exit
+debug_run: debug-run
+debug_run_start: debug-run-start
+debug_prog: debug-prog
+tmux_run_gdb: tmux-run-gdb
+tmux_trace_loop: tmux-trace-loop
+trace_core: trace-core
+run_perf_dupdrop: run-perf-dupdrop
+
 .SUFFIXES: .f .test
-.PHONY: test check run run_exit debug debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace trace_core trace-norm run_perf_dupdrop
+.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
