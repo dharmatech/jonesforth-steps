@@ -1234,8 +1234,7 @@ var_\name :
 	pop %esp
 	NEXT
 
-/*
-	INPUT AND OUTPUT ----------------------------------------------------------------------
+/* INPUT AND OUTPUT ----------------------------------------------------------------------
 
 	These are our first really meaty/complicated FORTH primitives.  I have chosen to write them in
 	assembler, but surprisingly in "real" FORTH implementations these are often written in terms
@@ -1259,17 +1258,17 @@ var_\name :
 	it automatically.  The other thing that KEY does is if it detects that stdin has closed, it
 	exits the program, which is why when you hit ^D the FORTH system cleanly exits.
 
-     buffer			      bufftop
-	|				 |
-	V				 V
+ buffer                           bufftop
+	|                                |
+	V                                V
 	+-------------------------------+--------------------------------------+
 	| INPUT READ FROM STDIN ....... | unused part of the buffer            |
 	+-------------------------------+--------------------------------------+
-	                  ^
-			  |
-		       currkey (next character to read)
+                      ^
+                      |
+                   currkey (next character to read)
 
-	<---------------------- BUFFER_SIZE (4096 bytes) ---------------------->
+	<---------------------- BUFFER_SIZE (4096 bytes) ----------------------> 
 */
 
 	defcode "KEY",3,,KEY
@@ -1385,10 +1384,10 @@ _WORD:
 	/* Search for the end of the word, storing chars as we go. */
 	mov $word_buffer,%edi	// pointer to return buffer
 2:
-	stosb			// add character to return buffer
-	call _KEY		// get next key, returned in %al
-	cmpb $' ',%al		// is blank?
-	ja 2b			// if not, keep looping
+	stosb           // add character to return buffer
+	call _KEY       // get next key, returned in %al
+	cmpb $' ',%al   // is blank?
+	ja 2b           // if not, keep looping
 
 	/* Return the word (well, the static buffer) and length. */
 	sub $word_buffer,%edi
@@ -1486,8 +1485,7 @@ _NUMBER:
 
 5:	ret
 
-/*
-	DICTIONARY LOOK UPS ----------------------------------------------------------------------
+/*  DICTIONARY LOOK UPS ----------------------------------------------------------------------
 
 	We're building up to our prelude on how FORTH code is compiled, but first we need yet more infrastructure.
 
@@ -1507,7 +1505,7 @@ _NUMBER:
 
 	See also >CFA and >DFA.
 
-	FIND doesn't find dictionary entries which are flagged as HIDDEN.  See below for why.
+	FIND doesn't find dictionary entries which are flagged as HIDDEN.  See below for why. 
 */
 
 	defcode "FIND",4,,FIND
@@ -1556,8 +1554,7 @@ _FIND:
 	xor %eax,%eax		// Return zero to indicate not found.
 	ret
 
-/*
-	FIND returns the dictionary pointer, but when compiling we need the codeword pointer (recall
+/*  FIND returns the dictionary pointer, but when compiling we need the codeword pointer (recall
 	that FORTH definitions are compiled into lists of codeword pointers).  The standard FORTH
 	word >CFA turns a dictionary pointer into a codeword pointer.
 
@@ -1629,8 +1626,7 @@ _TCFA:
 	.int INCR4		// 4+		(add 4 to it to get to next word)
 	.int EXIT		// EXIT		(return from FORTH word)
 
-/*
-	COMPILING ----------------------------------------------------------------------
+/*  COMPILING ----------------------------------------------------------------------
 
 	Now we'll talk about how FORTH compiles words.  Recall that a word definition looks like this:
 
@@ -1779,6 +1775,8 @@ _TCFA:
 	constants and other data).
 */
 
+// #region CREATE
+
 	defcode "CREATE",6,,CREATE
 
 	// Get the name length and address.
@@ -1806,8 +1804,9 @@ _TCFA:
 	movl %edi,var_HERE
 	NEXT
 
-/*
-	Because I want to define : (COLON) in FORTH, not assembler, we need a few more FORTH words
+// #endregion
+
+/*  Because I want to define : (COLON) in FORTH, not assembler, we need a few more FORTH words
 	to use.
 
 	The first is , (COMMA) which is a standard FORTH word which appends a 32 bit integer to the user
@@ -2099,8 +2098,8 @@ _COMMA:
 	// Is it in the dictionary?
 	xor %eax,%eax
 	movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
-	call _FIND		// Returns %eax = pointer to header or 0 if not found.
-	test %eax,%eax		// Found?
+	call _FIND                 // Returns %eax = pointer to header or 0 if not found.
+	test %eax,%eax             // Found?
 	jz 1f
 
 	// In the dictionary.  Is it an IMMEDIATE codeword?
