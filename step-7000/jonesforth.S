@@ -59,40 +59,45 @@ cold_start:			// High-level code without a codeword.
         // Store the chain of links.
         .set link,0
 
-        .macro defword name, namelen, flags=0, label
+.macro defword name, namelen, flags=0, label
         .section .rodata
         .align 4
-        .globl name_\label
-name_\label :
-        .int link		// link
-        .set link,name_\label
-        .byte \flags+\namelen	// flags + length byte
-        .ascii "\name"		// the name
-        .align 4		// padding to next 4 byte boundary
-        .globl \label
-\label :
-        .int DOCOL		// codeword - the interpreter
-        // list of word pointers follow
-        .endm
 
-        .macro defcode name, namelen, flags=0, label
+        .globl name_\label
+        name_\label :
+                .int link		// link
+                .set link,name_\label
+                .byte \flags+\namelen	// flags + length byte
+                .ascii "\name"		// the name
+                .align 4		// padding to next 4 byte boundary
+        
+        .globl \label
+        \label :
+                .int DOCOL		// codeword - the interpreter
+                                        // list of word pointers follow
+.endm
+
+.macro defcode name, namelen, flags=0, label
         .section .rodata
         .align 4
+
         .globl name_\label
-name_\label :
-        .int link		// link
-        .set link,name_\label
-        .byte \flags+\namelen	// flags + length byte
-        .ascii "\name"		// the name
-        .align 4		// padding to next 4 byte boundary
+        name_\label :
+                .int link		// link
+                .set link,name_\label
+                .byte \flags+\namelen	// flags + length byte
+                .ascii "\name"		// the name
+                .align 4		// padding to next 4 byte boundary
+        
         .globl \label
-\label :
-        .int code_\label	// codeword
+        \label :
+                .int code_\label	// codeword
+        
         .text
-        //.align 4
+        .align 4
         .globl code_\label
-code_\label :			// assembler code follows
-        .endm
+        code_\label :			// assembler code follows
+.endm
 
 /*      Now some easy FORTH primitives.  These are written in assembly for speed.  If you understand
         i386 assembly language then it is worth reading these.  However if you don't understand assembly
@@ -120,23 +125,23 @@ code_\label :			// assembler code follows
         push %eax		// and push it on top
         NEXT
 
-        defcode "ROT",3,,ROT
+defcode "ROT",3,,ROT
         pop %eax
         pop %ebx
         pop %ecx
         push %ebx
         push %eax
         push %ecx
-        NEXT
+NEXT
 
-        defcode "-ROT",4,,NROT
+defcode "-ROT",4,,NROT
         pop %eax
         pop %ebx
         pop %ecx
         push %eax
         push %ecx
         push %ebx
-        NEXT
+NEXT
 
         defcode "2DROP",5,,TWODROP // drop top two elements of stack
         pop %eax
@@ -632,13 +637,13 @@ _WORD:
 word_buffer:
         .space 32
 
-        defcode "NUMBER",6,,NUMBER
+defcode "NUMBER",6,,NUMBER
         pop %ecx		// length of string
         pop %edi		// start address of string
         call _NUMBER
         push %eax		// parsed number
         push %ecx		// number of unparsed characters (0 = no error)
-        NEXT
+NEXT
 
 _NUMBER:
         xor %eax,%eax
@@ -663,88 +668,90 @@ _NUMBER:
         movl $1,%ecx
         ret
 
-        // Loop reading digits.
-1:	imull %edx,%eax		// %eax *= BASE
-        movb (%edi),%bl		// %bl = next character in string
-        inc %edi
+                // Loop reading digits.
+        1:	imull %edx,%eax		// %eax *= BASE
+                movb (%edi),%bl		// %bl = next character in string
+                inc %edi
 
-        // Convert 0-9, A-Z to a number 0-35.
-2:	subb $'0',%bl		// < '0'?
-        jb 4f
-        cmp $10,%bl		// <= '9'?
-        jb 3f
-        subb $17,%bl		// < 'A'? (17 is 'A'-'0')
-        jb 4f
-        addb $10,%bl
+                // Convert 0-9, A-Z to a number 0-35.
+        2:	subb $'0',%bl		// < '0'?
+                jb 4f
+                cmp $10,%bl		// <= '9'?
+                jb 3f
+                subb $17,%bl		// < 'A'? (17 is 'A'-'0')
+                jb 4f
+                addb $10,%bl
 
-3:	cmp %dl,%bl		// >= BASE?
-        jge 4f
+        3:	cmp %dl,%bl		// >= BASE?
+                jge 4f
 
-        // OK, so add it to %eax and loop.
-        add %ebx,%eax
-        dec %ecx
-        jnz 1b
+                // OK, so add it to %eax and loop.
+                add %ebx,%eax
+                dec %ecx
+                jnz 1b
 
-        // Negate the result if first character was '-' (saved on the stack).
-4:	pop %ebx
-        JZ_IF_ZERO %ebx, 5f
-        neg %eax
+                // Negate the result if first character was '-' (saved on the stack).
+        4:	pop %ebx
+                JZ_IF_ZERO %ebx, 5f
+                neg %eax
 
 5:	ret
 
 /*  DICTIONARY LOOK UPS ---------------------------------------------------------------------- */
 
-        defcode "FIND",4,,FIND
+defcode "FIND",4,,FIND
         pop %ecx		// %ecx = length
         pop %edi		// %edi = address
         call _FIND
         push %eax		// %eax = address of dictionary entry (or NULL)
-        NEXT
+NEXT
 
 _FIND:
         push %esi		// Save %esi so we can use it in string comparison.
 
         // Now we start searching backwards through the dictionary for this word.
         mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
-1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
-        je 4f
 
-        // Compare the length expected and the length of the word.
-        // Note that if the F_HIDDEN flag is set on the word, then by a bit of trickery
-        // this won't pick the word (the length will appear to be wrong).
-        xor %eax,%eax
-        movb 4(%edx),%al	// %al = flags+length field
-        andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
-        cmpb %cl,%al		// Length is the same?
-        jne 2f
+        1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+                je 4f
 
-        // Compare the strings in detail.
-        push %ecx		// Save the length
-        push %edi		// Save the address (repe cmpsb will move this pointer)
-        lea 5(%edx),%esi	// Dictionary string we are checking against.
-        repe cmpsb		// Compare the strings.
-        pop %edi
-        pop %ecx
-        jne 2f			// Not the same.
+                // Compare the length expected and the length of the word.
+                // Note that if the F_HIDDEN flag is set on the word, then by a bit of trickery
+                // this won't pick the word (the length will appear to be wrong).
+                xor %eax,%eax
+                movb 4(%edx),%al	// %al = flags+length field
+                andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+                cmpb %cl,%al		// Length is the same?
+                jne 2f
 
-        // The strings are the same - return the header pointer in %eax
-        pop %esi
-        mov %edx,%eax
-        ret
+                // Compare the strings in detail.
+                push %ecx		// Save the length
+                push %edi		// Save the address (repe cmpsb will move this pointer)
+                lea 5(%edx),%esi	// Dictionary string we are checking against.
+                repe cmpsb		// Compare the strings.
+                pop %edi
+                pop %ecx
+                jne 2f			// Not the same.
 
-2:	mov (%edx),%edx		// Move back through the link field to the previous word
-        jmp 1b			// .. and loop.
+                // The strings are the same - return the header pointer in %eax
+                pop %esi
+                mov %edx,%eax
+                ret
 
-4:	// Not found.
-        pop %esi
-        xor %eax,%eax		// Return zero to indicate not found.
-        ret
+        2:	mov (%edx),%edx		// Move back through the link field to the previous word
+                jmp 1b			// .. and loop.
 
-        defcode ">CFA",4,,TCFA
+        4:	// Not found.
+                pop %esi
+                xor %eax,%eax		// Return zero to indicate not found.
+ret
+
+defcode ">CFA",4,,TCFA
         pop %edi
         call _TCFA
         push %edi
-        NEXT
+NEXT
+
 _TCFA:
         xor %eax,%eax
         add $4,%edi		// Skip link pointer.
@@ -754,9 +761,9 @@ _TCFA:
         add %eax,%edi		// Skip the name.
         addl $3,%edi		// The codeword is 4-byte aligned.
         andl $~3,%edi
-        ret
+ret
 
-        defword ">DFA",4,,TDFA
+defword ">DFA",4,,TDFA
         .int TCFA		// >CFA		(get code field address)
         .int INCR4		// 4+		(add 4 to it to get to next word)
         .int EXIT		// EXIT		(return from FORTH word)
@@ -789,26 +796,27 @@ defcode "CREATE",6,,CREATE
         movl %edi,var_HERE
 NEXT
 
-        defcode ",",1,,COMMA
+defcode ",",1,,COMMA
         pop %eax		// Code pointer to store.
         call _COMMA
-        NEXT
+NEXT
+
 _COMMA:
         movl var_HERE,%edi	// HERE
         stosl			// Store it.
         movl %edi,var_HERE	// Update HERE (incremented)
-        ret
+ret
 
-        defcode "[",1,F_IMMED,LBRAC
+defcode "[",1,F_IMMED,LBRAC
         xor %eax,%eax
         movl %eax,var_STATE	// Set STATE to 0.
-        NEXT
+NEXT
 
-        defcode "]",1,,RBRAC
+defcode "]",1,,RBRAC
         movl $1,var_STATE	// Set STATE to 1.
-        NEXT
+NEXT
 
-        defword ":",1,,COLON
+defword ":",1,,COLON
         .int WORD		// Get the name of the new word
         .int CREATE		// CREATE the dictionary entry / header
         .int LIT, DOCOL, COMMA	// Append DOCOL  (the codeword).
@@ -816,7 +824,7 @@ _COMMA:
         .int RBRAC		// Go into compile mode.
         .int EXIT		// Return from the function.
 
-        defword ";",1,F_IMMED,SEMICOLON
+defword ";",1,F_IMMED,SEMICOLON
         .int LIT, EXIT, COMMA	// Append EXIT (so the word will return).
         .int LATEST, FETCH, HIDDEN // Toggle hidden flag -- unhide the word (see below for definition).
         .int LBRAC		// Go back to IMMEDIATE mode.
@@ -889,7 +897,7 @@ _COMMA:
         This interpreter is pretty simple, but remember that in FORTH you can always override
         it later with a more powerful one!
  */
-        defcode "INTERPRET",9,,INTERPRET
+defcode "INTERPRET",9,,INTERPRET
         call _WORD		// Returns %ecx = length, %edi = pointer to word.
 
         // Is it in the dictionary?
@@ -897,7 +905,7 @@ _COMMA:
         movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
         call _FIND                 // Returns %eax = pointer to header or 0 if not found.
         // Found?
-        JZ_IF_ZERO %eax, 1f
+        JZ_IF_ZERO %eax, .L_try_literal
 
         // In the dictionary.  Is it an IMMEDIATE codeword?
         mov %eax,%edi		// %edi = dictionary entry
@@ -907,50 +915,53 @@ _COMMA:
         pop %ax
         andb $F_IMMED,%al	// Is IMMED flag set?
         mov %edi,%eax
-        jnz 4f			// If IMMED, jump straight to executing.
+        jnz .L_execute		// If IMMED, jump straight to executing.
 
         jmp 2f
 
-1:	// Not in the dictionary (not a word) so assume it's a literal number.
-        incl interpret_is_lit
-        call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
-        test %ecx,%ecx
-        jnz 6f
-        mov %eax,%ebx
-        mov $LIT,%eax		// The word is LIT
+        .L_try_literal:
+                // Not in the dictionary (not a word) so assume it's a literal number.
+                incl interpret_is_lit
+                call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
+                test %ecx,%ecx
+                jnz 6f
+                mov %eax,%ebx
+                mov $LIT,%eax		// The word is LIT
 
-2:	// Are we compiling or executing?
-        movl var_STATE,%edx
-        JZ_IF_ZERO %edx, 4f	// Jump if executing.
+        2:	// Are we compiling or executing?
+                movl var_STATE,%edx
+                // JZ_IF_ZERO %edx, 4f	// Jump if executing.
+                JZ_IF_ZERO %edx, .L_execute	// Jump if executing.
 
-        // Compiling - just append the word to the current dictionary definition.
-        call _COMMA
-        mov interpret_is_lit,%ecx // Was it a literal?
-        JZ_IF_ZERO %ecx, 3f
-        mov %ebx,%eax		// Yes, so LIT is followed by a number.
-        call _COMMA
-3:	NEXT
+                // Compiling - just append the word to the current dictionary definition.
+                call _COMMA
+                mov interpret_is_lit,%ecx // Was it a literal?
+                JZ_IF_ZERO %ecx, 3f
+                mov %ebx,%eax		// Yes, so LIT is followed by a number.
+                call _COMMA
+        3:	NEXT
 
-4:	// Executing - run it!
-        mov interpret_is_lit,%ecx // Literal?
-        test %ecx,%ecx		// Literal?
-        jnz 5f
+        .L_execute:
+                // Executing - run it!
+                mov interpret_is_lit,%ecx // Literal?
+                test %ecx,%ecx            // Literal?
+                jnz 5f
 
-        // Not a literal, execute it now.  This never returns, but the codeword will
-        // eventually call NEXT which will reenter the loop in QUIT.
-        jmp *(%eax)
+                // Not a literal, execute it now.  This never returns, but the codeword will
+                // eventually call NEXT which will reenter the loop in QUIT.
+                jmp *(%eax)
 
-5:	// Executing a literal, which means push it on the stack.
-        push %ebx    // push literal on stack
-        NEXT
+        5:	// Executing a literal, which means push it on the stack.
+                push %ebx    // push literal on stack
+                NEXT
 
-6:	// Parse error (not a known word or a number in the current BASE).
-        // Print a simple parse error message.
-        SYS_CALL_WRITE $2, $errmsg, $errmsgend-errmsg
+        6:	// Parse error (not a known word or a number in the current BASE).
+                // Print a simple parse error message.
+                SYS_CALL_WRITE $2, $errmsg, $errmsgend-errmsg
 
-        SYS_CALL_WRITE $2, $errmsgnl, $1
+                SYS_CALL_WRITE $2, $errmsgnl, $1
 
-        NEXT
+NEXT
 
         .section .rodata
 errmsg: .ascii "PARSE ERROR: "
