@@ -1,0 +1,3467 @@
+574		mov %esp,var_S0		// Save the initial data stack pointer in FORTH variable S0.
+575		mov $return_stack_top,%ebp // Initialise the return stack.
+_start () at jonesforth.S:576
+576		call set_up_data_segment
+set_up_data_segment () at jonesforth.S:2274
+2274		xor %ebx,%ebx		// Call brk(0)
+2275		movl $__NR_brk,%eax
+2276		int $0x80
+2277		movl %eax,var_HERE	// Initialise HERE to point at beginning of data segment.
+2278		addl $INITIAL_DATA_SEGMENT_SIZE,%eax	// Reserve nn bytes of memory for initial data segment.
+2279		movl %eax,%ebx		// Call brk(HERE+INITIAL_DATA_SEGMENT_SIZE)
+2280		movl $__NR_brk,%eax
+2281		int $0x80
+2282		ret
+_start () at jonesforth.S:578
+578		mov $cold_start,%esi	// Initialise interpreter.
+579		NEXT			// Run interpreter!
+0x08049025	579		NEXT			// Run interpreter!
+DOCOL () at jonesforth.S:508
+508		PUSHRSP %esi		// push %esi on to the return stack
+0x08049003	508		PUSHRSP %esi		// push %esi on to the return stack
+509		addl $4,%eax		// %eax points to codeword, so make
+510		movl %eax,%esi		// %esi point to first data word
+511		NEXT
+0x0804900c	511		NEXT
+code_RZ () at jonesforth.S:1169
+1169		defconst "R0",2,,RZ,return_stack_top
+0x080491fb in code_RZ () at jonesforth.S:1169
+1169		defconst "R0",2,,RZ,return_stack_top
+0x080491fc	1169		defconst "R0",2,,RZ,return_stack_top
+code_RSPSTORE () at jonesforth.S:1214
+1214		pop %ebp
+code_RSPSTORE () at jonesforth.S:1215
+1215		NEXT
+0x08049289	1215		NEXT
+code_INTERPRET () at jonesforth.S:2096
+2096		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+_WORD () at jonesforth.S:1378
+1378		call _KEY		// get next key, returned in %eax
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1379
+1379		cmpb $'\\',%al		// start of a comment?
+1380		je 3f			// if so, skip the comment
+1381		cmpb $' ',%al
+1382		jbe 1b			// if so, keep looking
+1385		mov $word_buffer,%edi	// pointer to return buffer
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1393		sub $word_buffer,%edi
+1394		mov %edi,%ecx		// return length of the word
+1395		mov $word_buffer,%edi	// return address of the word
+1396		ret
+code_INTERPRET () at jonesforth.S:2099
+2099		xor %eax,%eax
+2100		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
+2101		call _FIND		// Returns %eax = pointer to header or 0 if not found.
+_FIND () at jonesforth.S:1520
+1520		push %esi		// Save %esi so we can use it in string comparison.
+1523		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1554		pop %esi
+_FIND () at jonesforth.S:1555
+1555		xor %eax,%eax		// Return zero to indicate not found.
+_FIND () at jonesforth.S:1556
+1556		ret
+code_INTERPRET () at jonesforth.S:2102
+2102		test %eax,%eax		// Found?
+2103		jz 1f
+2118		incl interpret_is_lit
+2119		call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
+_NUMBER () at jonesforth.S:1436
+1436		xor %eax,%eax
+1437		xor %ebx,%ebx
+1439		test %ecx,%ecx		// trying to parse a zero-length string is an error, but will return 0.
+1440		jz 5f
+1442		movl var_BASE,%edx	// get BASE (in %dl)
+1445		movb (%edi),%bl		// %bl = first character in string
+1446		inc %edi
+1447		push %eax		// push 0 on stack
+_NUMBER () at jonesforth.S:1448
+1448		cmpb $'-',%bl		// negative number?
+1449		jnz 2f
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1459	1:	imull %edx,%eax		// %eax *= BASE
+1460		movb (%edi),%bl		// %bl = next character in string
+1461		inc %edi
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1459	1:	imull %edx,%eax		// %eax *= BASE
+1460		movb (%edi),%bl		// %bl = next character in string
+1461		inc %edi
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1481	4:	pop %ebx
+_NUMBER () at jonesforth.S:1482
+1482		test %ebx,%ebx
+1483		jz 5f
+1486	5:	ret
+code_INTERPRET () at jonesforth.S:2120
+2120		test %ecx,%ecx
+2121		jnz 6f
+2122		mov %eax,%ebx
+2123		mov $LIT,%eax		// The word is LIT
+2126		movl var_STATE,%edx
+2127		test %edx,%edx
+2128		jz 4f			// Jump if executing.
+2140		mov interpret_is_lit,%ecx // Literal?
+2141		test %ecx,%ecx		// Literal?
+2142		jnz 5f
+2149		push %ebx
+code_INTERPRET () at jonesforth.S:2150
+2150		NEXT
+0x0804951a	2150		NEXT
+code_BRANCH () at jonesforth.S:2035
+2035		add (%esi),%esi		// add the offset to the instruction pointer
+2036		NEXT
+0x0804947e	2036		NEXT
+code_INTERPRET () at jonesforth.S:2096
+2096		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+_WORD () at jonesforth.S:1378
+1378		call _KEY		// get next key, returned in %eax
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1379
+1379		cmpb $'\\',%al		// start of a comment?
+1380		je 3f			// if so, skip the comment
+1381		cmpb $' ',%al
+1382		jbe 1b			// if so, keep looking
+1385		mov $word_buffer,%edi	// pointer to return buffer
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1393		sub $word_buffer,%edi
+1394		mov %edi,%ecx		// return length of the word
+1395		mov $word_buffer,%edi	// return address of the word
+1396		ret
+code_INTERPRET () at jonesforth.S:2099
+2099		xor %eax,%eax
+2100		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
+2101		call _FIND		// Returns %eax = pointer to header or 0 if not found.
+_FIND () at jonesforth.S:1520
+1520		push %esi		// Save %esi so we can use it in string comparison.
+1523		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1554		pop %esi
+_FIND () at jonesforth.S:1555
+1555		xor %eax,%eax		// Return zero to indicate not found.
+_FIND () at jonesforth.S:1556
+1556		ret
+code_INTERPRET () at jonesforth.S:2102
+2102		test %eax,%eax		// Found?
+2103		jz 1f
+2118		incl interpret_is_lit
+2119		call _NUMBER		// Returns the parsed number in %eax, %ecx > 0 if error
+_NUMBER () at jonesforth.S:1436
+1436		xor %eax,%eax
+1437		xor %ebx,%ebx
+1439		test %ecx,%ecx		// trying to parse a zero-length string is an error, but will return 0.
+1440		jz 5f
+1442		movl var_BASE,%edx	// get BASE (in %dl)
+1445		movb (%edi),%bl		// %bl = first character in string
+1446		inc %edi
+1447		push %eax		// push 0 on stack
+_NUMBER () at jonesforth.S:1448
+1448		cmpb $'-',%bl		// negative number?
+1449		jnz 2f
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1459	1:	imull %edx,%eax		// %eax *= BASE
+1460		movb (%edi),%bl		// %bl = next character in string
+1461		inc %edi
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1459	1:	imull %edx,%eax		// %eax *= BASE
+1460		movb (%edi),%bl		// %bl = next character in string
+1461		inc %edi
+1464	2:	subb $'0',%bl		// < '0'?
+1465		jb 4f
+1466		cmp $10,%bl		// <= '9'?
+1467		jb 3f
+1472	3:	cmp %dl,%bl		// >= BASE?
+1473		jge 4f
+1476		add %ebx,%eax
+1477		dec %ecx
+1478		jnz 1b
+1481	4:	pop %ebx
+_NUMBER () at jonesforth.S:1482
+1482		test %ebx,%ebx
+1483		jz 5f
+1486	5:	ret
+code_INTERPRET () at jonesforth.S:2120
+2120		test %ecx,%ecx
+2121		jnz 6f
+2122		mov %eax,%ebx
+2123		mov $LIT,%eax		// The word is LIT
+2126		movl var_STATE,%edx
+2127		test %edx,%edx
+2128		jz 4f			// Jump if executing.
+2140		mov interpret_is_lit,%ecx // Literal?
+2141		test %ecx,%ecx		// Literal?
+2142		jnz 5f
+2149		push %ebx
+code_INTERPRET () at jonesforth.S:2150
+2150		NEXT
+0x0804951a	2150		NEXT
+code_BRANCH () at jonesforth.S:2035
+2035		add (%esi),%esi		// add the offset to the instruction pointer
+2036		NEXT
+0x0804947e	2036		NEXT
+code_INTERPRET () at jonesforth.S:2096
+2096		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+_WORD () at jonesforth.S:1378
+1378		call _KEY		// get next key, returned in %eax
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1379
+1379		cmpb $'\\',%al		// start of a comment?
+1380		je 3f			// if so, skip the comment
+1381		cmpb $' ',%al
+1382		jbe 1b			// if so, keep looking
+1385		mov $word_buffer,%edi	// pointer to return buffer
+1387		stosb			// add character to return buffer
+1388		call _KEY		// get next key, returned in %al
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1389
+1389		cmpb $' ',%al		// is blank?
+1390		ja 2b			// if not, keep looping
+1393		sub $word_buffer,%edi
+1394		mov %edi,%ecx		// return length of the word
+1395		mov $word_buffer,%edi	// return address of the word
+1396		ret
+code_INTERPRET () at jonesforth.S:2099
+2099		xor %eax,%eax
+2100		movl %eax,interpret_is_lit // Not a literal number (not yet anyway ...)
+2101		call _FIND		// Returns %eax = pointer to header or 0 if not found.
+_FIND () at jonesforth.S:1520
+1520		push %esi		// Save %esi so we can use it in string comparison.
+1523		mov var_LATEST,%edx	// LATEST points to name header of the latest word in the dictionary
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1550	2:	mov (%edx),%edx		// Move back through the link field to the previous word
+1551		jmp 1b			// .. and loop.
+1524	1:	test %edx,%edx		// NULL pointer?  (end of the linked list)
+1525		je 4f
+1530		xor %eax,%eax
+1531		movb 4(%edx),%al	// %al = flags+length field
+1532		andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
+1533		cmpb %cl,%al		// Length is the same?
+1534		jne 2f
+1537		push %ecx		// Save the length
+_FIND () at jonesforth.S:1538
+1538		push %edi		// Save the address (repe cmpsb will move this pointer)
+_FIND () at jonesforth.S:1539
+1539		lea 5(%edx),%esi	// Dictionary string we are checking against.
+1540		repe cmpsb		// Compare the strings.
+1541		pop %edi
+_FIND () at jonesforth.S:1542
+1542		pop %ecx
+_FIND () at jonesforth.S:1543
+1543		jne 2f			// Not the same.
+1546		pop %esi
+_FIND () at jonesforth.S:1547
+1547		mov %edx,%eax
+_FIND () at jonesforth.S:1548
+1548		ret
+code_INTERPRET () at jonesforth.S:2102
+2102		test %eax,%eax		// Found?
+2103		jz 1f
+2106		mov %eax,%edi		// %edi = dictionary entry
+2107		movb 4(%edi),%al	// Get name+flags.
+2108		push %ax		// Just save it for now.
+code_INTERPRET () at jonesforth.S:2109
+2109		call _TCFA		// Convert dictionary entry (in %edi) to codeword pointer.
+_TCFA () at jonesforth.S:1595
+1595		xor %eax,%eax
+1596		add $4,%edi		// Skip link pointer.
+1597		movb (%edi),%al		// Load flags+len into %al.
+1598		inc %edi		// Skip flags+len byte.
+1599		andb $F_LENMASK,%al	// Just the length, not the flags.
+1600		add %eax,%edi		// Skip the name.
+1601		addl $3,%edi		// The codeword is 4-byte aligned.
+1602		andl $~3,%edi
+1603		ret
+code_INTERPRET () at jonesforth.S:2110
+2110		pop %ax
+code_INTERPRET () at jonesforth.S:2111
+2111		andb $F_IMMED,%al	// Is IMMED flag set?
+2112		mov %edi,%eax
+2113		jnz 4f			// If IMMED, jump straight to executing.
+2115		jmp 2f
+2126		movl var_STATE,%edx
+2127		test %edx,%edx
+2128		jz 4f			// Jump if executing.
+2140		mov interpret_is_lit,%ecx // Literal?
+2141		test %ecx,%ecx		// Literal?
+2142		jnz 5f
+2146		jmp *(%eax)
+code_ADD () at jonesforth.S:786
+786		pop %eax		// get top of stack
+code_ADD () at jonesforth.S:787
+787		addl %eax,(%esp)	// and add it to next word on stack
+788		NEXT
+0x08049099	788		NEXT
+code_BRANCH () at jonesforth.S:2035
+2035		add (%esi),%esi		// add the offset to the instruction pointer
+2036		NEXT
+0x0804947e	2036		NEXT
+code_INTERPRET () at jonesforth.S:2096
+2096		call _WORD		// Returns %ecx = length, %edi = pointer to word.
+_WORD () at jonesforth.S:1378
+1378		call _KEY		// get next key, returned in %eax
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+_WORD () at jonesforth.S:1379
+1379		cmpb $'\\',%al		// start of a comment?
+1380		je 3f			// if so, skip the comment
+1381		cmpb $' ',%al
+1382		jbe 1b			// if so, keep looking
+1378		call _KEY		// get next key, returned in %eax
+_KEY () at jonesforth.S:1279
+1279		mov (currkey),%ebx
+[Inferior 1 (process 1987150) exited normally]
+archive/loop-until-key.gdb:53: Error in sourced command file:
+No registers.
+
+quit
