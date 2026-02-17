@@ -541,6 +541,14 @@ var_\name :
 	int $0x80
 	.endm
 
+	.macro SYS_CALL_WRITE fd, buf, nbytes
+	mov \fd,%ebx		// 1st param: file descriptor
+	mov \buf,%ecx		// 2nd param: source buffer
+	mov \nbytes,%edx	// 3rd param: bytes to write
+	mov $__NR_write,%eax	// syscall: write
+	int $0x80
+	.endm
+
 // ----------------------------------------------------------------------
 	defcode "KEY",3,,KEY
 	call _KEY
@@ -551,11 +559,6 @@ _KEY:
 	cmp $1,%eax		// If %eax != 1, then exit.
 	jne 1f
 
-	// Keep these coherent for parse-error context printing.
-	movl $buffer+1,%ecx
-	movl %ecx,currkey
-	movl %ecx,bufftop
-
 	xor %eax,%eax
 	movb buffer,%al
 	ret
@@ -563,14 +566,6 @@ _KEY:
 1:	// Error or end of input: exit the program.
 	SYS_CALL_EXIT $0
 // ----------------------------------------------------------------------
-	.data
-	.align 4
-currkey:
-	.int buffer		// Current place in input buffer (next character to read).
-bufftop:
-	.int buffer		// Last valid data in input buffer + 1.
-// ----------------------------------------------------------------------
-
 /*
 	By contrast, output is much simpler.  The FORTH word EMIT writes out a single byte to stdout.
 	This implementation just uses the write system call.  No attempt is made to buffer output, but
@@ -582,16 +577,9 @@ bufftop:
 	call _EMIT
 	NEXT
 _EMIT:
-	mov $1,%ebx		// 1st param: stdout
-
 	// write needs the address of the byte to write
 	mov %al,emit_scratch
-	mov $emit_scratch,%ecx	// 2nd param: address
-
-	mov $1,%edx		// 3rd param: nbytes = 1
-
-	mov $__NR_write,%eax	// write syscall
-	int $0x80
+	SYS_CALL_WRITE $1, $emit_scratch, $1
 	ret
 
 	.data			// NB: easier to fit in the .data section
@@ -882,11 +870,9 @@ _COMMA:
 	NEXT
 
 	defcode "TELL",4,,TELL
-	mov $1,%ebx		// 1st param: stdout
 	pop %edx		// 3rd param: length of string
 	pop %ecx		// 2nd param: address of string
-	mov $__NR_write,%eax	// write syscall
-	int $0x80
+	SYS_CALL_WRITE $1, %ecx, %edx
 	NEXT
 
 /*	QUIT AND INTERPRET ---------------------------------------------------------------------- */
@@ -959,27 +945,10 @@ _COMMA:
 	NEXT
 
 6:	// Parse error (not a known word or a number in the current BASE).
-	// Print an error message followed by up to 40 characters of context.
-	mov $2,%ebx		// 1st param: stderr
-	mov $errmsg,%ecx	// 2nd param: error message
-	mov $errmsgend-errmsg,%edx // 3rd param: length of string
-	mov $__NR_write,%eax	// write syscall
-	int $0x80
+	// Print a simple parse error message.
+	SYS_CALL_WRITE $2, $errmsg, $errmsgend-errmsg
 
-	mov (currkey),%ecx	// the error occurred just before currkey position
-	mov %ecx,%edx
-	sub $buffer,%edx	// %edx = currkey - buffer (length in buffer before currkey)
-	cmp $40,%edx		// if > 40, then print only 40 characters
-	jle 7f
-	mov $40,%edx
-7:	sub %edx,%ecx		// %ecx = start of area to print, %edx = length
-	mov $__NR_write,%eax	// write syscall
-	int $0x80
-
-	mov $errmsgnl,%ecx	// newline
-	mov $1,%edx
-	mov $__NR_write,%eax	// write syscall
-	int $0x80
+	SYS_CALL_WRITE $2, $errmsgnl, $1
 
 	NEXT
 
