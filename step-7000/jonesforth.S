@@ -111,52 +111,6 @@ code_\label :			// assembler code follows
 	push %eax
 	NEXT
 
-	defcode "OVER",4,,OVER
-	mov 4(%esp),%eax	// get the second element of stack
-	push %eax		// and push it on top
-	NEXT
-
-	defcode "ROT",3,,ROT
-	pop %eax
-	pop %ebx
-	pop %ecx
-	push %ebx
-	push %eax
-	push %ecx
-	NEXT
-
-	defcode "-ROT",4,,NROT
-	pop %eax
-	pop %ebx
-	pop %ecx
-	push %eax
-	push %ecx
-	push %ebx
-	NEXT
-
-	defcode "2DROP",5,,TWODROP // drop top two elements of stack
-	pop %eax
-	pop %eax
-	NEXT
-
-	defcode "2DUP",4,,TWODUP // duplicate top two elements of stack
-	mov (%esp),%eax
-	mov 4(%esp),%ebx
-	push %ebx
-	push %eax
-	NEXT
-
-	defcode "2SWAP",5,,TWOSWAP // swap top two pairs of elements of stack
-	pop %eax
-	pop %ebx
-	pop %ecx
-	pop %edx
-	push %ebx
-	push %eax
-	push %edx
-	push %ecx
-	NEXT
-
 	defcode "?DUP",4,,QDUP	// duplicate top of stack if non-zero
 	movl (%esp),%eax
 	test %eax,%eax
@@ -164,20 +118,9 @@ code_\label :			// assembler code follows
 	push %eax
 1:	NEXT
 
-	defcode "1+",2,,INCR
-	incl (%esp)		// increment top of stack
-	NEXT
-
-	defcode "1-",2,,DECR
-	decl (%esp)		// decrement top of stack
-	NEXT
-
-	defcode "4+",2,,INCR4
-	addl $4,(%esp)		// add 4 to top of stack
-	NEXT
-
-	defcode "4-",2,,DECR4
-	subl $4,(%esp)		// subtract 4 from top of stack
+	defcode "OVER",4,,OVER
+	mov 4(%esp),%eax	// get the second element of stack
+	push %eax		// and push it on top
 	NEXT
 
 	defcode "+",1,,ADD
@@ -255,54 +198,6 @@ code_\label :			// assembler code follows
 	pop %eax
 	pop %ebx
 	cmp %eax,%ebx
-	setge %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0=",2,,ZEQU	// top of stack equals 0?
-	pop %eax
-	test %eax,%eax
-	setz %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<>",3,,ZNEQU	// top of stack not 0?
-	pop %eax
-	test %eax,%eax
-	setnz %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<",2,,ZLT	// comparisons with 0
-	pop %eax
-	test %eax,%eax
-	setl %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0>",2,,ZGT
-	pop %eax
-	test %eax,%eax
-	setg %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0<=",3,,ZLE
-	pop %eax
-	test %eax,%eax
-	setle %al
-	movzbl %al,%eax
-	pushl %eax
-	NEXT
-
-	defcode "0>=",3,,ZGE
-	pop %eax
-	test %eax,%eax
 	setge %al
 	movzbl %al,%eax
 	pushl %eax
@@ -528,6 +423,39 @@ var_\name :
 
 /*      INPUT AND OUTPUT ---------------------------------------------------------------------- */
 
+	defcode ">INPUT",6,,TOINPUT
+	pop %eax		// new input fd
+	mov (input_depth),%ecx
+	cmp $INPUT_STACK_MAX,%ecx
+	jae 9f
+
+	// Save current source state so nested IMPORT works.
+	mov %ecx,%edx
+	lea (%edx,%edx,2),%edx	// depth * 3
+	shl $2,%edx		// depth * 12 bytes
+	lea input_stack,%edi
+
+	mov (currfd),%ebx
+	mov %ebx,(%edi,%edx,1)
+	mov (currkey),%ebx
+	mov %ebx,4(%edi,%edx,1)
+	mov (bufftop),%ebx
+	mov %ebx,8(%edi,%edx,1)
+
+	incl %ecx
+	mov %ecx,(input_depth)
+
+	mov %eax,(currfd)
+	mov $buffer,%ebx
+	mov %ebx,(currkey)
+	mov %ebx,(bufftop)
+	NEXT
+
+9:	// Input source stack overflow.
+	xor %ebx,%ebx
+	mov $__NR_exit,%eax
+	int $0x80
+
 	defcode "KEY",3,,KEY
 	call _KEY
 	push %eax		// push return value on stack
@@ -543,7 +471,7 @@ _KEY:
 	ret
 
 1:	// Out of input; use read(2) to fetch more input from stdin.
-	xor %ebx,%ebx		// 1st param: stdin
+	mov (currfd),%ebx	// 1st param: active input fd
 	mov $buffer,%ecx	// 2nd param: buffer
 	mov %ecx,currkey
 	mov $BUFFER_SIZE,%edx	// 3rd param: max length
@@ -555,7 +483,34 @@ _KEY:
 	mov %ecx,bufftop
 	jmp _KEY
 
-2:	// Error or end of input: exit the program.
+2:	// Error or end of input on this source.
+	mov (currfd),%ebx
+	test %ebx,%ebx
+	jz 3f
+	mov $__NR_close,%eax	// close imported file descriptor
+	int $0x80
+
+3:	// Return to previous source if one exists.
+	mov (input_depth),%ecx
+	test %ecx,%ecx
+	jz 4f
+	decl %ecx
+	mov %ecx,(input_depth)
+
+	mov %ecx,%edx
+	lea (%edx,%edx,2),%edx	// depth * 3
+	shl $2,%edx		// depth * 12 bytes
+	lea input_stack,%edi
+
+	mov (%edi,%edx,1),%ebx
+	mov %ebx,(currfd)
+	mov 4(%edi,%edx,1),%ebx
+	mov %ebx,(currkey)
+	mov 8(%edi,%edx,1),%ebx
+	mov %ebx,(bufftop)
+	jmp _KEY
+
+4:	// No previous source: exit the program.
 	xor %ebx,%ebx
 	mov $__NR_exit,%eax	// syscall: exit
 	int $0x80
@@ -566,6 +521,10 @@ currkey:
 	.int buffer		// Current place in input buffer (next character to read).
 bufftop:
 	.int buffer		// Last valid data in input buffer + 1.
+currfd:
+	.int 0			// Current input file descriptor (0 = stdin).
+input_depth:
+	.int 0			// Number of saved input states.
 
 /*
 	By contrast, output is much simpler.  The FORTH word EMIT writes out a single byte to stdout.
@@ -761,10 +720,10 @@ _TCFA:
 	andl $~3,%edi
 	ret
 
-	defword ">DFA",4,,TDFA
-	.int TCFA		// >CFA		(get code field address)
-	.int INCR4		// 4+		(add 4 to it to get to next word)
-	.int EXIT		// EXIT		(return from FORTH word)
+	// defword ">DFA",4,,TDFA
+	// .int TCFA		// >CFA		(get code field address)
+	// .int INCR4		// 4+		(add 4 to it to get to next word)
+	// .int EXIT		// EXIT		(return from FORTH word)
 
 /*  COMPILING ---------------------------------------------------------------------- */
 
@@ -1053,6 +1012,7 @@ set_up_data_segment:
 */
 	.set RETURN_STACK_SIZE,8192
 	.set BUFFER_SIZE,4096
+	.set INPUT_STACK_MAX,16
 
 	.bss
 /* FORTH return stack. */
@@ -1066,3 +1026,7 @@ return_stack_top:		// Initial top of return stack.
 buffer:
 	.space BUFFER_SIZE
 
+/* Saved input states for nested imports: fd, currkey, bufftop. */
+	.align 16
+input_stack:
+	.space INPUT_STACK_MAX * 12
