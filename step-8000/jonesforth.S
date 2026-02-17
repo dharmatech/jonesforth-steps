@@ -93,8 +93,6 @@ code_\label :			// assembler code follows
 	you can skip the details.
 */
 
-// #region primitives
-
 	defcode "DROP",4,,DROP
 	pop %eax		// drop top of stack
 	NEXT
@@ -339,7 +337,7 @@ code_\label :			// assembler code follows
 	push %eax		// push the literal number on to stack
 	NEXT
 
-// #endregion
+
 
 //      MEMORY ----------------------------------------------------------------------
 

@@ -20,6 +20,7 @@
 	lea 4(%ebp),%ebp
 	.endm
 
+
 /* DOCOL - the interpreter! */
 	.text
 	.align 4
@@ -93,8 +94,6 @@ code_\label :			// assembler code follows
 	you can skip the details.
 */
 
-// #region primitives
-
 	defcode "DROP",4,,DROP
 	pop %eax		// drop top of stack
 	NEXT
@@ -111,6 +110,52 @@ code_\label :			// assembler code follows
 	push %eax
 	NEXT
 
+	defcode "OVER",4,,OVER
+	mov 4(%esp),%eax	// get the second element of stack
+	push %eax		// and push it on top
+	NEXT
+
+	defcode "ROT",3,,ROT
+	pop %eax
+	pop %ebx
+	pop %ecx
+	push %ebx
+	push %eax
+	push %ecx
+	NEXT
+
+	defcode "-ROT",4,,NROT
+	pop %eax
+	pop %ebx
+	pop %ecx
+	push %eax
+	push %ecx
+	push %ebx
+	NEXT
+
+	defcode "2DROP",5,,TWODROP // drop top two elements of stack
+	pop %eax
+	pop %eax
+	NEXT
+
+	defcode "2DUP",4,,TWODUP // duplicate top two elements of stack
+	mov (%esp),%eax
+	mov 4(%esp),%ebx
+	push %ebx
+	push %eax
+	NEXT
+
+	defcode "2SWAP",5,,TWOSWAP // swap top two pairs of elements of stack
+	pop %eax
+	pop %ebx
+	pop %ecx
+	pop %edx
+	push %ebx
+	push %eax
+	push %edx
+	push %ecx
+	NEXT
+
 	defcode "?DUP",4,,QDUP	// duplicate top of stack if non-zero
 	movl (%esp),%eax
 	test %eax,%eax
@@ -118,9 +163,20 @@ code_\label :			// assembler code follows
 	push %eax
 1:	NEXT
 
-	defcode "OVER",4,,OVER
-	mov 4(%esp),%eax	// get the second element of stack
-	push %eax		// and push it on top
+	defcode "1+",2,,INCR
+	incl (%esp)		// increment top of stack
+	NEXT
+
+	defcode "1-",2,,DECR
+	decl (%esp)		// decrement top of stack
+	NEXT
+
+	defcode "4+",2,,INCR4
+	addl $4,(%esp)		// add 4 to top of stack
+	NEXT
+
+	defcode "4-",2,,DECR4
+	subl $4,(%esp)		// subtract 4 from top of stack
 	NEXT
 
 	defcode "+",1,,ADD
@@ -203,6 +259,54 @@ code_\label :			// assembler code follows
 	pushl %eax
 	NEXT
 
+	defcode "0=",2,,ZEQU	// top of stack equals 0?
+	pop %eax
+	test %eax,%eax
+	setz %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
+	defcode "0<>",3,,ZNEQU	// top of stack not 0?
+	pop %eax
+	test %eax,%eax
+	setnz %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
+	defcode "0<",2,,ZLT	// comparisons with 0
+	pop %eax
+	test %eax,%eax
+	setl %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
+	defcode "0>",2,,ZGT
+	pop %eax
+	test %eax,%eax
+	setg %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
+	defcode "0<=",3,,ZLE
+	pop %eax
+	test %eax,%eax
+	setle %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
+	defcode "0>=",3,,ZGE
+	pop %eax
+	test %eax,%eax
+	setge %al
+	movzbl %al,%eax
+	pushl %eax
+	NEXT
+
 	defcode "AND",3,,AND	// bitwise AND
 	pop %eax
 	andl %eax,(%esp)
@@ -234,7 +338,7 @@ code_\label :			// assembler code follows
 	push %eax		// push the literal number on to stack
 	NEXT
 
-// #endregion
+
 
 //      MEMORY ----------------------------------------------------------------------
 
@@ -423,94 +527,34 @@ var_\name :
 
 /*      INPUT AND OUTPUT ---------------------------------------------------------------------- */
 
-	defcode ">INPUT",6,,TOINPUT
-	pop %eax		// new input fd
-	mov (input_depth),%ecx
-	cmp $INPUT_STACK_MAX,%ecx
-	jae 9f
-
-	// Save current source state so nested IMPORT works.
-	mov %ecx,%edx
-	lea (%edx,%edx,2),%edx	// depth * 3
-	shl $2,%edx		// depth * 12 bytes
-	lea input_stack,%edi
-
-	mov (currfd),%ebx
-	mov %ebx,(%edi,%edx,1)
-	mov (currkey),%ebx
-	mov %ebx,4(%edi,%edx,1)
-	mov (bufftop),%ebx
-	mov %ebx,8(%edi,%edx,1)
-
-	incl %ecx
-	mov %ecx,(input_depth)
-
-	mov %eax,(currfd)
-	mov $buffer,%ebx
-	mov %ebx,(currkey)
-	mov %ebx,(bufftop)
-	NEXT
-
-9:	// Input source stack overflow.
-	xor %ebx,%ebx
-	mov $__NR_exit,%eax
+	.macro SYS_CALL_READ fd, buf, nbytes
+	mov \fd,%ebx		// 1st param: file descriptor
+	mov \buf,%ecx		// 2nd param: destination buffer
+	mov \nbytes,%edx	// 3rd param: max bytes to read
+	mov $__NR_read,%eax	// syscall: read
 	int $0x80
+	.endm
+
 
 	defcode "KEY",3,,KEY
 	call _KEY
 	push %eax		// push return value on stack
 	NEXT
 _KEY:
-	mov (currkey),%ebx
-	cmp (bufftop),%ebx
-	jge 1f			// exhausted the input buffer?
+	SYS_CALL_READ $0, $buffer, $1
+	cmp $1,%eax		// If %eax != 1, then exit.
+	jne 1f
+
+	// Keep these coherent for parse-error context printing.
+	movl $buffer+1,%ecx
+	movl %ecx,currkey
+	movl %ecx,bufftop
+
 	xor %eax,%eax
-	mov (%ebx),%al		// get next key from input buffer
-	inc %ebx
-	mov %ebx,(currkey)	// increment currkey
+	movb buffer,%al
 	ret
 
-1:	// Out of input; use read(2) to fetch more input from stdin.
-	mov (currfd),%ebx	// 1st param: active input fd
-	mov $buffer,%ecx	// 2nd param: buffer
-	mov %ecx,currkey
-	mov $BUFFER_SIZE,%edx	// 3rd param: max length
-	mov $__NR_read,%eax	// syscall: read
-	int $0x80
-	test %eax,%eax		// If %eax <= 0, then exit.
-	jbe 2f
-	addl %eax,%ecx		// buffer+%eax = bufftop
-	mov %ecx,bufftop
-	jmp _KEY
-
-2:	// Error or end of input on this source.
-	mov (currfd),%ebx
-	test %ebx,%ebx
-	jz 3f
-	mov $__NR_close,%eax	// close imported file descriptor
-	int $0x80
-
-3:	// Return to previous source if one exists.
-	mov (input_depth),%ecx
-	test %ecx,%ecx
-	jz 4f
-	decl %ecx
-	mov %ecx,(input_depth)
-
-	mov %ecx,%edx
-	lea (%edx,%edx,2),%edx	// depth * 3
-	shl $2,%edx		// depth * 12 bytes
-	lea input_stack,%edi
-
-	mov (%edi,%edx,1),%ebx
-	mov %ebx,(currfd)
-	mov 4(%edi,%edx,1),%ebx
-	mov %ebx,(currkey)
-	mov 8(%edi,%edx,1),%ebx
-	mov %ebx,(bufftop)
-	jmp _KEY
-
-4:	// No previous source: exit the program.
+1:	// Error or end of input: exit the program.
 	xor %ebx,%ebx
 	mov $__NR_exit,%eax	// syscall: exit
 	int $0x80
@@ -521,10 +565,6 @@ currkey:
 	.int buffer		// Current place in input buffer (next character to read).
 bufftop:
 	.int buffer		// Last valid data in input buffer + 1.
-currfd:
-	.int 0			// Current input file descriptor (0 = stdin).
-input_depth:
-	.int 0			// Number of saved input states.
 
 /*
 	By contrast, output is much simpler.  The FORTH word EMIT writes out a single byte to stdout.
@@ -720,10 +760,10 @@ _TCFA:
 	andl $~3,%edi
 	ret
 
-	// defword ">DFA",4,,TDFA
-	// .int TCFA		// >CFA		(get code field address)
-	// .int INCR4		// 4+		(add 4 to it to get to next word)
-	// .int EXIT		// EXIT		(return from FORTH word)
+	defword ">DFA",4,,TDFA
+	.int TCFA		// >CFA		(get code field address)
+	.int INCR4		// 4+		(add 4 to it to get to next word)
+	.int EXIT		// EXIT		(return from FORTH word)
 
 /*  COMPILING ---------------------------------------------------------------------- */
 
@@ -1012,7 +1052,6 @@ set_up_data_segment:
 */
 	.set RETURN_STACK_SIZE,8192
 	.set BUFFER_SIZE,4096
-	.set INPUT_STACK_MAX,16
 
 	.bss
 /* FORTH return stack. */
@@ -1025,8 +1064,3 @@ return_stack_top:		// Initial top of return stack.
 	.align 4096
 buffer:
 	.space BUFFER_SIZE
-
-/* Saved input states for nested imports: fd, currkey, bufftop. */
-	.align 16
-input_stack:
-	.space INPUT_STACK_MAX * 12
