@@ -535,7 +535,13 @@ var_\name :
 	int $0x80
 	.endm
 
+	.macro SYS_CALL_EXIT status
+	mov \status,%ebx	// 1st param: status
+	mov $__NR_exit,%eax	// syscall: exit
+	int $0x80
+	.endm
 
+// ----------------------------------------------------------------------
 	defcode "KEY",3,,KEY
 	call _KEY
 	push %eax		// push return value on stack
@@ -555,16 +561,15 @@ _KEY:
 	ret
 
 1:	// Error or end of input: exit the program.
-	xor %ebx,%ebx
-	mov $__NR_exit,%eax	// syscall: exit
-	int $0x80
-
+	SYS_CALL_EXIT $0
+// ----------------------------------------------------------------------
 	.data
 	.align 4
 currkey:
 	.int buffer		// Current place in input buffer (next character to read).
 bufftop:
 	.int buffer		// Last valid data in input buffer + 1.
+// ----------------------------------------------------------------------
 
 /*
 	By contrast, output is much simpler.  The FORTH word EMIT writes out a single byte to stdout.
