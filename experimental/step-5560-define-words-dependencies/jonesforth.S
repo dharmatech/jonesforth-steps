@@ -79,6 +79,7 @@ defcode "LIT",3,,LIT
     lodsl
     push %eax               // push the literal number on to stack
 NEXT
+#define HAVE_WORD_LIT 1
 
 .macro defvar name, namelen, flags=0, label, initial=0
     defcode \name,\namelen,\flags,\label
@@ -95,6 +96,7 @@ defvar "HERE",4,,HERE
 defvar "LATEST",6,,LATEST,name_SYSCALL0 // SYSCALL0 must be last in built-in dictionary
 defvar "S0",2,,SZ
 defvar "BASE",4,,BASE,10
+#define HAVE_VAR_LATEST 1
 
 
 //#include <asm-i386/unistd.h>  // you might need this instead
@@ -467,8 +469,20 @@ _start:
 NEXT                    // Run interpreter!
 
 // ----------------------------------------------------------------------
+
 #include "add.S"
-#include "stack.S"
+#include "asm/stack.S"
+// ----------------------------------------------------------------------
+defcode ",",1,,COMMA
+    pop %eax                // Code pointer to store.
+    call _COMMA
+NEXT
+#define HAVE_WORD_COMMA 1
+// ----------------------------------------------------------------------
+#include "asm/COLON.S"
+#include "asm/SEMICOLON.S"
+// ----------------------------------------------------------------------
+
 // ----------------------------------------------------------------------
 defcode "SYSCALL0",8,,SYSCALL0
     pop %eax                // System call number (see <asm/unistd.h>)

@@ -788,13 +788,13 @@ defcode "]",1,,RBRAC
 NEXT
 
 
-        defword ":",1,,COLON
-        .int WORD               // Get the name of the new word
-        .int CREATE             // CREATE the dictionary entry / header
-        .int LIT, DOCOL, COMMA  // Append DOCOL  (the codeword).
-        .int LATEST, FETCH, HIDDEN // Make the word hidden (see below for definition).
-        .int RBRAC              // Go into compile mode.
-        .int EXIT               // Return from the function.
+defword ":",1,,COLON
+.int WORD               // Get the name of the new word
+.int CREATE             // CREATE the dictionary entry / header
+.int LIT, DOCOL, COMMA  // Append DOCOL  (the codeword).
+.int LATEST, FETCH, HIDDEN // Make the word hidden (see below for definition).
+.int RBRAC              // Go into compile mode.
+.int EXIT               // Return from the function.
 
 
 defword ";",1,F_IMMED,SEMICOLON

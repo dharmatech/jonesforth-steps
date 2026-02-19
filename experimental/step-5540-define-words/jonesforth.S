@@ -467,8 +467,89 @@ _start:
 NEXT                    // Run interpreter!
 
 // ----------------------------------------------------------------------
+
 #include "add.S"
 #include "stack.S"
+// ----------------------------------------------------------------------
+
+defcode ",",1,,COMMA
+    pop %eax                // Code pointer to store.
+    call _COMMA
+NEXT
+// ----------------------------------------------------------------------
+
+defcode "CREATE",6,,CREATE
+
+    // Get the name length and address.
+    pop %ecx                // %ecx = length
+    pop %ebx                // %ebx = address of name
+
+    // Link pointer.
+    movl var_HERE,%edi      // %edi is the address of the header
+    movl var_LATEST,%eax    // Get link pointer
+    stosl                   // and store it in the header.
+
+    // Length byte and the word itself.
+    mov %cl,%al             // Get the length.
+    stosb                   // Store the length/flags byte.
+    push %esi
+    mov %ebx,%esi           // %esi = word
+    rep movsb               // Copy the word
+    pop %esi
+    addl $3,%edi            // Align to next 4 byte boundary.
+    andl $~3,%edi
+
+    // Update LATEST and HERE.
+    movl var_HERE,%eax
+    movl %eax,var_LATEST
+    movl %edi,var_HERE
+NEXT
+
+defcode "WORD",4,,WORD
+    call _WORD
+    push %edi               // push base address
+    push %ecx               // push length
+NEXT
+
+defcode "@",1,,FETCH
+    pop %ebx                // address to fetch
+    mov (%ebx),%eax         // fetch it
+    push %eax               // push value onto stack
+NEXT
+
+defcode "HIDDEN",6,,HIDDEN
+    pop %edi                // Dictionary entry.
+    addl $4,%edi            // Point to name/flags byte.
+    xorb $F_HIDDEN,(%edi)   // Toggle the HIDDEN bit.
+NEXT
+
+defcode "[",1,F_IMMED,LBRAC
+    xor %eax,%eax
+    movl %eax,var_STATE     // Set STATE to 0.
+NEXT
+
+defcode "]",1,,RBRAC
+    movl $1,var_STATE       // Set STATE to 1.
+NEXT
+
+defcode "EXIT",4,,EXIT
+    POPRSP %esi             // pop return stack into %esi
+NEXT
+
+// ----------------------------------------------------------------------
+defword ":",1,,COLON
+.int WORD               // Get the name of the new word
+.int CREATE             // CREATE the dictionary entry / header
+.int LIT, DOCOL, COMMA  // Append DOCOL  (the codeword).
+.int LATEST, FETCH, HIDDEN // Make the word hidden (see below for definition).
+.int RBRAC              // Go into compile mode.
+.int EXIT               // Return from the function.
+// ----------------------------------------------------------------------
+defword ";",1,F_IMMED,SEMICOLON
+    .int LIT, EXIT, COMMA   // Append EXIT (so the word will return).
+    .int LATEST, FETCH, HIDDEN // Toggle hidden flag -- unhide the word (see below for definition).
+    .int LBRAC              // Go back to IMMEDIATE mode.
+    .int EXIT               // Return from the function.
 // ----------------------------------------------------------------------
 defcode "SYSCALL0",8,,SYSCALL0
     pop %eax                // System call number (see <asm/unistd.h>)
