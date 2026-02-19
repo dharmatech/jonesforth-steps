@@ -1,6 +1,4 @@
-        .set JONES_VERSION,47
 
-/* NEXT macro. */
 .macro NEXT
     lodsl
     jmp *(%eax)
@@ -17,42 +15,21 @@
     lea 4(%ebp),%ebp
 .endm
 
-
 /* DOCOL - the interpreter! */
-        .text
-        .align 4
+.text
+.align 4
 DOCOL:
         PUSHRSP %esi            // push %esi on to the return stack
         addl $4,%eax            // %eax points to codeword, so make
         movl %eax,%esi          // %esi point to first data word
-        NEXT
+NEXT
 
+.set F_IMMED,0x80
+.set F_HIDDEN,0x20
+.set F_LENMASK,0x1f     // length mask
 
-
-/* Assembler entry point. */
-.text
-.globl _start
-_start:
-    cld
-    mov %esp,var_S0         // Save the initial data stack pointer in FORTH variable S0.
-    mov $return_stack_top,%ebp // Initialise the return stack.
-    call set_up_data_segment
-
-    mov $cold_start,%esi    // Initialise interpreter.
-NEXT                    // Run interpreter!
-
-        .section .rodata
-cold_start:                     // High-level code without a codeword.
-        .int QUIT
-
-
-/* Flags - these are discussed later. */
-        .set F_IMMED,0x80
-        .set F_HIDDEN,0x20
-        .set F_LENMASK,0x1f     // length mask
-
-        // Store the chain of links.
-        .set link,0
+// Store the chain of links.
+.set link,0
 
 .macro defword name, namelen, flags=0, label
     .section .rodata
@@ -94,15 +71,7 @@ cold_start:                     // High-level code without a codeword.
         .globl code_\label
         code_\label :                   // assembler code follows
 .endm
-
-// defcode "4+",2,,INCR4
-//     addl $4,(%esp)          // add 4 to top of stack
-// NEXT
      
-defcode "EXIT",4,,EXIT
-    POPRSP %esi             // pop return stack into %esi
-NEXT
-
 defcode "LIT",3,,LIT
     // %esi points to the next command, but in this case it points to the next
     // literal 32 bit integer.  Get that literal into %eax and increment %esi.
@@ -137,7 +106,6 @@ defvar "BASE",4,,BASE,10
     NEXT
 .endm
 
-defconst "VERSION",7,,VERSION,JONES_VERSION
 defconst "R0",2,,RZ,return_stack_top
 defconst "DOCOL",5,,__DOCOL,DOCOL
 defconst "F_IMMED",7,,__F_IMMED,F_IMMED
@@ -221,9 +189,9 @@ _WORD:
         jmp 1b
 // end _WORD
 
-        .data                   // NB: easier to fit in the .data section
-        // A static buffer where WORD returns.  Subsequent calls
-        // overwrite this buffer.  Maximum word length is 32 chars.
+.data                   // NB: easier to fit in the .data section
+// A static buffer where WORD returns.  Subsequent calls
+// overwrite this buffer.  Maximum word length is 32 chars.
 word_buffer:
         .space 32
 
@@ -442,13 +410,13 @@ defcode "INTERPRET",9,,INTERPRET
 
 NEXT
 
-    .section .rodata
+.section .rodata
 errmsg: .ascii "PARSE ERROR: "
 errmsgend:
 errmsgnl: .ascii "\n"
 
-    .data                   // NB: easier to fit in the .data section
-    .align 4
+.data                   // NB: easier to fit in the .data section
+.align 4
 interpret_is_lit:
     .int 0                  // Flag used to record if reading a literal
 
@@ -458,8 +426,8 @@ defcode "SYSCALL0",8,,SYSCALL0
     push %eax               // Result (negative for -errno)
 NEXT
 
-        .text
-        .set INITIAL_DATA_SEGMENT_SIZE,65536
+.text
+.set INITIAL_DATA_SEGMENT_SIZE,65536
 
 set_up_data_segment:
     xor %ebx,%ebx           // Call brk(0)
@@ -472,21 +440,33 @@ set_up_data_segment:
     int $0x80
 ret
 
-        .set RETURN_STACK_SIZE,8192
-        .set BUFFER_SIZE,4096
+.set RETURN_STACK_SIZE,8192
+.set BUFFER_SIZE,4096
 
-        .bss
+.bss
 /* FORTH return stack. */
-        .align 4096
+.align 4096
 return_stack:
-        .space RETURN_STACK_SIZE
+.space RETURN_STACK_SIZE
 return_stack_top:               // Initial top of return stack.
 
 /* This is used as a temporary input buffer when reading from files or the terminal. */
-        .align 4096
+.align 4096
 buffer:
-        .space BUFFER_SIZE
+    .space BUFFER_SIZE
 
+.section .rodata
+cold_start:                     // High-level code without a codeword.
+    .int QUIT
 
+/* Assembler entry point. */
+.text
+.globl _start
+_start:
+    cld
+    mov %esp,var_S0            // Save the initial data stack pointer in FORTH variable S0.
+    mov $return_stack_top,%ebp // Initialise the return stack.
+    call set_up_data_segment
 
-/* END OF jonesforth.S */
+    mov $cold_start,%esi    // Initialise interpreter.
+NEXT                    // Run interpreter!
