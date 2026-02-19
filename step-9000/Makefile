@@ -73,7 +73,7 @@ trace-core: jonesforth gdb/trace-core.gdb
 	@{ cat $(PROG); echo; } > $(TRACE_INPUT)
 	gdb -q -x gdb/trace-core.gdb ./jonesforth
 	$(MAKE) trace-norm
-	$(MAKE) trace-tree
+	$(MAKE) trace-org
 
 trace-norm:
 	@test -f trace.md || (echo "trace.md not found; run 'make trace PROG=...' first." && exit 1)

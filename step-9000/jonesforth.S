@@ -1878,11 +1878,11 @@ NEXT
         ; (SEMICOLON) is also elegantly simple.  Notice the F_IMMED flag.
 */
 
-        defword ";",1,F_IMMED,SEMICOLON
-        .int LIT, EXIT, COMMA   // Append EXIT (so the word will return).
-        .int LATEST, FETCH, HIDDEN // Toggle hidden flag -- unhide the word (see below for definition).
-        .int LBRAC              // Go back to IMMEDIATE mode.
-        .int EXIT               // Return from the function.
+defword ";",1,F_IMMED,SEMICOLON
+    .int LIT, EXIT, COMMA   // Append EXIT (so the word will return).
+    .int LATEST, FETCH, HIDDEN // Toggle hidden flag -- unhide the word (see below for definition).
+    .int LBRAC              // Go back to IMMEDIATE mode.
+    .int EXIT               // Return from the function.
 
 /*      EXTENDING THE COMPILER ----------------------------------------------------------------------
 

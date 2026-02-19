@@ -1,4 +1,6 @@
 
+;; emacs -nw -Q -l scripts/jonesforth-layout.el
+
 (global-auto-revert-mode 1)
 (setq auto-revert-interval 1)             ; check disk every second
 (setq auto-revert-verbose nil)            ; silence mode-line messages
