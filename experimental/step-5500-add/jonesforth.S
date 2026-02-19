@@ -71,7 +71,7 @@ NEXT
         .globl code_\label
         code_\label :                   // assembler code follows
 .endm
-     
+
 defcode "LIT",3,,LIT
     // %esi points to the next command, but in this case it points to the next
     // literal 32 bit integer.  Get that literal into %eax and increment %esi.
@@ -470,3 +470,8 @@ _start:
 
     mov $cold_start,%esi    // Initialise interpreter.
 NEXT                    // Run interpreter!
+
+// ----------------------------------------------------------------------
+
+#include "add.S"
+#include "stack.S"
