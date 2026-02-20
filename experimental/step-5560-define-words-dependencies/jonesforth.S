@@ -312,12 +312,6 @@ _COMMA:
     movl %edi,var_HERE      // Update HERE (incremented)
 ret
 
-defcode "IMMEDIATE",9,F_IMMED,IMMEDIATE
-    movl var_LATEST,%edi    // LATEST word.
-    addl $4,%edi            // Point to name/flags byte.
-    xorb $F_IMMED,(%edi)    // Toggle the IMMED bit.
-NEXT
-
 defcode "BRANCH",6,,BRANCH
     add (%esi),%esi         // add the offset to the instruction pointer
 NEXT
@@ -470,8 +464,12 @@ NEXT                    // Run interpreter!
 
 // ----------------------------------------------------------------------
 
-#include "add.S"
+#include "asm/arithmetic.S"
+#include "asm/comparison.S"
 #include "asm/stack.S"
+#include "asm/EMIT.S"
+#include "asm/runtime.S"
+#include "asm/FIND.S"
 // ----------------------------------------------------------------------
 defcode ",",1,,COMMA
     pop %eax                // Code pointer to store.
@@ -481,11 +479,6 @@ NEXT
 // ----------------------------------------------------------------------
 #include "asm/COLON.S"
 #include "asm/SEMICOLON.S"
+#include "asm/compiler-ext.S"
+#include "asm/syscalls.S"
 // ----------------------------------------------------------------------
-
-// ----------------------------------------------------------------------
-defcode "SYSCALL0",8,,SYSCALL0
-    pop %eax                // System call number (see <asm/unistd.h>)
-    int $0x80
-    push %eax               // Result (negative for -errno)
-NEXT

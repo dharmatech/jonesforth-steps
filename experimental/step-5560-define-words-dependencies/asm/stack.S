@@ -71,15 +71,6 @@ defcode "?DUP",4,,QDUP  // duplicate top of stack if non-zero
     1:
 NEXT
 
-#define HAVE_WORD_DROP 1
-#define HAVE_WORD_SWAP 1
-#define HAVE_WORD_DUP 1
-#define HAVE_WORD_OVER 1
-#define HAVE_WORD_ROT 1
-#define HAVE_WORD_NROT 1
-#define HAVE_WORD_TWODROP 1
-#define HAVE_WORD_TWODUP 1
-#define HAVE_WORD_TWOSWAP 1
-#define HAVE_WORD_QDUP 1
+#define HAVE_LIB_STACK 1
 
 #endif
