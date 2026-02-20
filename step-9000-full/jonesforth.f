@@ -248,7 +248,7 @@
 )
 
 ( Some more complicated stack examples, showing the stack notation. )
-: NIP ( x y -- y ) SWAP DROP ;
+: NIP  ( x y -- y )     SWAP DROP ;
 : TUCK ( x y -- y x y ) SWAP OVER ;
 : PICK ( x_u ... x_1 x_0 u -- x_u ... x_1 x_0 x_u )
 	1+		( add one because of 'u' on the stack )

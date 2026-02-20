@@ -1326,7 +1326,7 @@ _EMIT:
     int $0x80
 ret
 
-        .data                   // NB: easier to fit in the .data section
+.data                   // NB: easier to fit in the .data section
 emit_scratch:
         .space 1                // scratch used by EMIT
 
@@ -1395,11 +1395,11 @@ _WORD:
         jmp 1b
 // end _WORD
 
-        .data                   // NB: easier to fit in the .data section
-        // A static buffer where WORD returns.  Subsequent calls
-        // overwrite this buffer.  Maximum word length is 32 chars.
+.data                   // NB: easier to fit in the .data section
+// A static buffer where WORD returns.  Subsequent calls
+// overwrite this buffer.  Maximum word length is 32 chars.
 word_buffer:
-        .space 32
+.space 32
 
 /*
         As well as reading in words we'll need to read in numbers and for that we are using a function
