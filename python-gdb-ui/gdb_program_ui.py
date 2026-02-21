@@ -321,6 +321,67 @@ def parse_sections_args(argv: list[str]) -> tuple[str | None, int | None, bool]:
     return labels_file, word_size, markdown
 
 
+def parse_buffer_args(argv: list[str]) -> int | None:
+    if len(argv) > 1:
+        raise gdb.GdbError("Usage: ui-buffer [width]")
+    if not argv:
+        return None
+    try:
+        width = int(argv[0], 0)
+    except ValueError as exc:
+        raise gdb.GdbError(f"Invalid width: {argv[0]}") from exc
+    if width <= 0:
+        raise gdb.GdbError("width must be > 0")
+    return width
+
+
+def terminal_width(default: int = 80) -> int:
+    width = gdb.parameter("width")
+    if isinstance(width, int) and width > 0:
+        return width
+    return default
+
+
+def byte_to_printable(value: int) -> str:
+    if 32 <= value <= 126:
+        return chr(value)
+    return "."
+
+
+def bytes_to_escaped_ascii(data: bytes, max_len: int = 64) -> str:
+    shown = data[:max_len]
+    out: list[str] = []
+    for b in shown:
+        if b == 9:
+            out.append("\\t")
+        elif b == 10:
+            out.append("\\n")
+        elif b == 13:
+            out.append("\\r")
+        elif 32 <= b <= 126 and b not in (34, 92):
+            out.append(chr(b))
+        elif b == 34:
+            out.append('\\"')
+        elif b == 92:
+            out.append("\\\\")
+        else:
+            out.append(f"\\x{b:02x}")
+    text = "".join(out)
+    if len(data) > max_len:
+        text += "..."
+    return text
+
+
+def try_read_bytes(addr: int, length: int) -> bytes | None:
+    if length <= 0:
+        return b""
+    try:
+        mem = gdb.selected_inferior().read_memory(addr, length)
+    except gdb.MemoryError:
+        return None
+    return bytes(mem)
+
+
 def get_text_rows(start_expr: str | None, end_expr: str | None) -> list[TextRow]:
     if start_expr is None:
         bounds = section_bounds(".text")
@@ -655,6 +716,182 @@ class AliasUiWordsCommand(gdb.Command):
         gdb.execute(f"ui-rodata {arg}")
 
 
+class UiBufferCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("ui-buffer", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = from_tty
+        width_arg = parse_buffer_args(gdb.string_to_argv(arg))
+        ptr_w = pointer_size_bytes()
+
+        buffer_addr = eval_uint("&buffer")
+        currkey_slot = eval_uint("&currkey")
+        bufftop_slot = eval_uint("&bufftop")
+
+        currkey = try_read_uint(currkey_slot, ptr_w)
+        bufftop = try_read_uint(bufftop_slot, ptr_w)
+        if currkey is None:
+            raise gdb.GdbError("Could not read currkey")
+        if bufftop is None:
+            raise gdb.GdbError("Could not read bufftop")
+
+        buffer_size = 4096
+        data = bytes(gdb.selected_inferior().read_memory(buffer_addr, buffer_size))
+
+        curr_idx = currkey - buffer_addr
+        top_idx = bufftop - buffer_addr
+
+        term_w = width_arg if width_arg is not None else terminal_width()
+        window_len = max(16, min(buffer_size, term_w - 24))
+
+        center = curr_idx
+        start = max(0, center - (window_len // 2))
+        end = min(buffer_size, start + window_len)
+        start = max(0, end - window_len)
+
+        visible = "".join(byte_to_printable(b) for b in data[start:end])
+        left_clip = "..." if start > 0 else ""
+        right_clip = "..." if end < buffer_size else ""
+        text = f"{left_clip}{visible}{right_clip}"
+        line_prefix = f"buffer[{start}:{end}]: "
+
+        markers = [" "] * len(text)
+
+        def mark(index: int, char: str) -> None:
+            if start <= index < end:
+                pos = (index - start) + len(left_clip)
+                if markers[pos] != " " and markers[pos] != char:
+                    markers[pos] = "*"
+                else:
+                    markers[pos] = char
+
+        mark(curr_idx, "^")
+        mark(top_idx, "|")
+
+        gdb.write(
+            " ".join(
+                (
+                    f"buffer={format_hex(buffer_addr, ptr_w)}",
+                    f"currkey={format_hex(currkey, ptr_w)}(idx={curr_idx})",
+                    f"bufftop={format_hex(bufftop, ptr_w)}(idx={top_idx})",
+                )
+            )
+            + "\n"
+        )
+        gdb.write(f"{line_prefix}{text}\n")
+
+        marker_text = "".join(markers)
+        if marker_text.strip():
+            gdb.write(" " * len(line_prefix) + marker_text + "\n")
+            gdb.write(" " * len(line_prefix) + "^=currkey |=bufftop *=both\n")
+
+
+class UiFindCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("ui-find", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = arg
+        _ = from_tty
+        ptr_w = pointer_size_bytes()
+
+        eax = eval_uint("$eax")
+        ebx = eval_uint("$ebx")
+        ecx = eval_uint("$ecx")
+        edx = eval_uint("$edx")
+        esi = eval_uint("$esi")
+        edi = eval_uint("$edi")
+        latest_slot = eval_uint("&var_LATEST")
+        latest = try_read_uint(latest_slot, ptr_w)
+        if latest is None:
+            raise gdb.GdbError("Could not read var_LATEST")
+
+        gdb.write(
+            " ".join(
+                (
+                    f"pc={format_hex(eval_uint('$pc'), ptr_w)}",
+                    f"eax={format_hex(eax, ptr_w)}",
+                    f"ebx={format_hex(ebx, ptr_w)}",
+                    f"ecx={format_hex(ecx, ptr_w)}",
+                    f"edx={format_hex(edx, ptr_w)}",
+                    f"esi={format_hex(esi, ptr_w)}",
+                    f"edi={format_hex(edi, ptr_w)}",
+                )
+            )
+            + "\n"
+        )
+        gdb.write(f"LATEST={format_hex(latest, ptr_w)}\n")
+
+        target_len = max(0, min(ecx, 256))
+        target_bytes = try_read_bytes(edi, target_len)
+        if target_bytes is None:
+            gdb.write(
+                f"target addr={format_hex(edi, ptr_w)} len={ecx} text=(unreadable)\n"
+            )
+        else:
+            target_text = bytes_to_escaped_ascii(target_bytes, max_len=80)
+            gdb.write(
+                f'target addr={format_hex(edi, ptr_w)} len={ecx} text="{target_text}"\n'
+            )
+
+        if edx == 0:
+            gdb.write("candidate hdr=0x00000000 (end of dictionary)\n")
+            return
+
+        link = try_read_uint(edx, ptr_w)
+        flags_len_raw = try_read_bytes(edx + ptr_w, 1)
+        if link is None or flags_len_raw is None:
+            gdb.write(f"candidate hdr={format_hex(edx, ptr_w)} (unreadable)\n")
+            return
+
+        flags_len = flags_len_raw[0]
+        cand_len = flags_len & 0x1F
+        hidden = 1 if (flags_len & 0x20) else 0
+        immed = 1 if (flags_len & 0x80) else 0
+        name_addr = edx + ptr_w + 1
+        cand_bytes = try_read_bytes(name_addr, cand_len)
+        cand_text = (
+            "(unreadable)"
+            if cand_bytes is None
+            else f'"{bytes_to_escaped_ascii(cand_bytes, max_len=80)}"'
+        )
+
+        gdb.write(
+            " ".join(
+                (
+                    f"candidate hdr={format_hex(edx, ptr_w)}",
+                    f"link={format_hex(link, ptr_w)}",
+                    f"flags=0x{flags_len:02x}",
+                    f"len={cand_len}",
+                    f"hidden={hidden}",
+                    f"immed={immed}",
+                    f"name={cand_text}",
+                )
+            )
+            + "\n"
+        )
+
+        if target_bytes is not None and cand_bytes is not None:
+            cmp_len = min(len(target_bytes), len(cand_bytes))
+            prefix = 0
+            while prefix < cmp_len and target_bytes[prefix] == cand_bytes[prefix]:
+                prefix += 1
+            gdb.write(f"compare matched_prefix={prefix}/{cmp_len}\n")
+
+
+class StepiFindCommand(gdb.Command):
+    def __init__(self) -> None:
+        super().__init__("stepi-FIND_", gdb.COMMAND_DATA)
+
+    def invoke(self, arg: str, from_tty: bool) -> None:
+        _ = arg
+        _ = from_tty
+        gdb.execute("stepi")
+        gdb.execute("x/i $pc")
+        gdb.execute("ui-find")
+
+
 UiTextCommand()
 UiWordsCommand()
 UiDataCommand()
@@ -662,3 +899,6 @@ UiSectionsCommand()
 UiRegCommand()
 UiMemCommand()
 AliasUiWordsCommand()
+UiBufferCommand()
+UiFindCommand()
+StepiFindCommand()

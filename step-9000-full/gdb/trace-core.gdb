@@ -72,12 +72,11 @@ while $n > 0 && $_isvoid($_exitcode)
 
         ui-mem &currkey
         ui-mem &bufftop
+        ui-buffer
         echo &return_stack     \ 
         x/3xw &return_stack
         echo &return_stack_top \ 
         x/3xw &return_stack_top
-        echo &buffer           \ 
-        x/3xw &buffer
     end
     set $n = $n - 1
 end

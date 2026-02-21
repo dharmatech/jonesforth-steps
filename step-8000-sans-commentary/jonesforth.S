@@ -1,4 +1,4 @@
-        .set JONES_VERSION,47
+.set JONES_VERSION,47
 
 /* NEXT macro. */
 .macro NEXT

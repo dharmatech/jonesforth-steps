@@ -5,6 +5,10 @@ BUILD_ID_NONE :=
 SHELL	:= /bin/bash
 TRACE_INPUT := .trace.input.f
 DEBUG_INPUT := .debug.input.f
+PERF_DIR := perf
+PERF_DUPDROP_C := $(PERF_DIR)/perf_dupdrop.c
+PERF_DUPDROP_F := $(PERF_DIR)/perf_dupdrop.f
+PERF_DUPDROP_BIN := $(PERF_DIR)/perf_dupdrop
 
 all:	jonesforth
 
@@ -32,6 +36,15 @@ debug-prog: jonesforth
 	@test -n "$(PROG)" || (echo "Usage: make debug-prog PROG=examples/add.f" && exit 1)
 	@cat jonesforth.f $(PROG) <(echo BYE) > $(DEBUG_INPUT)
 	gdb -q -ex "break _start" -ex "run < $(DEBUG_INPUT)" ./jonesforth
+
+gdb-scenario-000-key: jonesforth gdb-scenarios/000-key/session.gdb
+	gdb -q -x gdb-scenarios/000-key/session.gdb ./jonesforth
+
+gdb-scenario-001-word: jonesforth gdb-scenarios/001-word/session.gdb
+	gdb -q -x gdb-scenarios/001-word/session.gdb ./jonesforth
+
+gdb-scenario-002-find: jonesforth gdb-scenarios/002-find/session.gdb
+	gdb -q -x gdb-scenarios/002-find/session.gdb ./jonesforth
 
 tmux-run-gdb: jonesforth
 	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
@@ -95,7 +108,7 @@ trace-org: trace-tree
 # 	{ printf '#+STARTUP: overview\n'; pandoc trace.tree.md --from markdown --to org; } > trace.tree.org
 
 clean:
-	rm -f jonesforth perf_dupdrop *~ core .test_* trace.md trace.norm.md trace.tree.md trace.tree.org $(TRACE_INPUT) $(DEBUG_INPUT)
+	rm -f jonesforth perf_dupdrop $(PERF_DUPDROP_BIN) *~ core .test_* trace.md trace.norm.md trace.tree.md trace.tree.org $(TRACE_INPUT) $(DEBUG_INPUT)
 
 # Tests.
 
@@ -115,11 +128,13 @@ test_%.test: tests/test_%.f jonesforth
 
 # Performance.
 
-perf_dupdrop: perf_dupdrop.c
+perf_dupdrop: $(PERF_DUPDROP_BIN)
+
+$(PERF_DUPDROP_BIN): $(PERF_DUPDROP_C)
 	gcc -m32 -O3 -Wall -Werror -o $@ $<
 
 run-perf-dupdrop: jonesforth
-	cat <(echo ': TEST-MODE ;') jonesforth.f perf_dupdrop.f | ./jonesforth
+	cat <(echo ': TEST-MODE ;') jonesforth.f $(PERF_DUPDROP_F) | ./jonesforth
 
 # Backward-compatible aliases.
 run_exit: run-exit
@@ -132,4 +147,4 @@ trace_core: trace-core
 run_perf_dupdrop: run-perf-dupdrop
 
 .SUFFIXES: .f .test
-.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
+.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop

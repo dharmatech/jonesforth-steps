@@ -19,12 +19,11 @@ define trace-loop
         x/4dw $edi
         ui-mem &currkey
         ui-mem &bufftop
+        ui-buffer
         echo &return_stack     \ 
         x/3xw &return_stack
         echo &return_stack_top \ 
         x/3xw &return_stack_top
-        echo &buffer           \ 
-        x/3xw &buffer
         echo --------------------------------------------------\n
     end
 end
