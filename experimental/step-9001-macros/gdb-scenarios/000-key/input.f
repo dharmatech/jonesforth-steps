@@ -1,0 +1,4 @@
+: DEMO-KEY  10 20 + ;
+DEMO-KEY
+1 2 3 4 5
+
