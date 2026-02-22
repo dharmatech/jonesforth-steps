@@ -46,6 +46,9 @@ gdb-scenario-001-word: jonesforth gdb-scenarios/001-word/session.gdb
 gdb-scenario-002-find: jonesforth gdb-scenarios/002-find/session.gdb
 	gdb -q -x gdb-scenarios/002-find/session.gdb ./jonesforth
 
+gdb-scenario-003-interpret: jonesforth gdb-scenarios/003-interpret/session.gdb
+	gdb -q -x gdb-scenarios/003-interpret/session.gdb ./jonesforth
+
 tmux-run-gdb: jonesforth
 	@command -v tmux >/dev/null || (echo "tmux not found" && exit 1)
 	@command -v gdb >/dev/null || (echo "gdb not found" && exit 1)
@@ -147,4 +150,4 @@ trace_core: trace-core
 run_perf_dupdrop: run-perf-dupdrop
 
 .SUFFIXES: .f .test
-.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
+.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find gdb-scenario-003-interpret tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
