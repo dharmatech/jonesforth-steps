@@ -116,13 +116,26 @@ clean:
 # Tests.
 
 TESTS	:= $(patsubst tests/%.f,%.test,$(wildcard tests/test_*.f))
+TESTS_PIPEFAIL := $(patsubst tests/%.f,%.pipefail.test,$(wildcard tests/test_*.f))
 
 test check: $(TESTS)
+test-pipefail check-pipefail: $(TESTS_PIPEFAIL)
 
 test_%.test: tests/test_%.f jonesforth
 	@echo -n "$< ... "
 	@rm -f .$@
 	@cat <(echo ': TEST-MODE ;') jonesforth.f $< <(echo 'TEST') | \
+	  ./jonesforth 2>&1 | \
+	  sed 's/DSP=[0-9]*//g' > .$@
+	@diff -u .$@ $<.out
+	@rm -f .$@
+	@echo "ok"
+
+test_%.pipefail.test: tests/test_%.f jonesforth
+	@echo -n "$< ... "
+	@rm -f .$@
+	@set -o pipefail; \
+	cat <(echo ': TEST-MODE ;') jonesforth.f $< <(echo 'TEST') | \
 	  ./jonesforth 2>&1 | \
 	  sed 's/DSP=[0-9]*//g' > .$@
 	@diff -u .$@ $<.out
@@ -150,4 +163,4 @@ trace_core: trace-core
 run_perf_dupdrop: run-perf-dupdrop
 
 .SUFFIXES: .f .test
-.PHONY: test check run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find gdb-scenario-003-interpret tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
+.PHONY: test check test-pipefail check-pipefail run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find gdb-scenario-003-interpret tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop

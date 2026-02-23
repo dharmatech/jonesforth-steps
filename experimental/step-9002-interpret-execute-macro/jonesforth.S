@@ -36,10 +36,15 @@
     jmp \false_label
 .endm
 
-.macro IF_FLAG mask, reg8, true_label, false_label
+.macro IF_FLAG_ELSE mask, reg8, true_label, false_label
     testb \mask, \reg8
     jnz \true_label
     jmp \false_label
+.endm
+
+.macro IF_FLAG mask, reg8, label
+    testb \mask, \reg8
+    jnz \label
 .endm
 
 .macro IF_MEM_ZERO mem, label
@@ -66,6 +71,10 @@
     mov \a3, %edx
     mov \nr, %eax
     int $0x80
+.endm
+
+.macro syscall_read fd, buf, len
+    syscall_3 $__NR_read, \fd, \buf, \len
 .endm
 
 .macro syscall_write fd, buf, len
@@ -132,12 +141,13 @@ NEXT
 
 .macro defvar name, namelen, flags=0, label, initial=0
     defcode \name,\namelen,\flags,\label
-    push $var_\name
+        push $var_\name
     NEXT
+
     .data
     .align 4
     var_\name :
-    .int \initial
+        .int \initial
 .endm
 
 defvar "STATE",5,,STATE
@@ -217,39 +227,85 @@ defcode "DSP!",4,,DSPSTORE
     pop %esp
 NEXT
 
+
+// .macro IF_MEM_GE mem1 mem2 label
+//     push %eax
+//         mov \mem1,%eax
+//         cmp \mem2,%eax
+//     pop %eax
+//     jge \label
+// .endm
+
+// tmp must be a 32-bit register
+// .macro IF_MEM_GE mem1, mem2, label, tmp=%eax
+//     push \tmp
+//         mov \mem1,\tmp
+//         cmp \mem2,\tmp
+//     pop \tmp
+//     jge \label
+// .endm
+
+.macro IF_AE lhs, rhs, label
+    push %eax
+        mov \lhs, %eax
+        cmp \rhs, %eax
+    pop %eax
+    jae \label
+.endm
+
+// signed
+.macro IF_LE lhs, rhs, label
+    push %eax
+        mov \lhs, %eax
+        cmp \rhs, %eax
+    pop %eax
+    jle \label
+.endm
+
+// unsigned
+.macro IF_BE lhs, rhs, label
+    push %eax
+        mov \lhs, %eax
+        cmp \rhs, %eax
+    pop %eax
+    jbe \label
+.endm
+
+.macro get_inc_currkey
+    mov $0,%eax
+    mov currkey,%ebx
+    mov (%ebx),%al          // get next key from input buffer
+    incl currkey
+.endm
+
 // ----------------------------------------------------------------------
 defcode "KEY",3,,KEY
     call _KEY
     push %eax               // push return value on stack
 NEXT
 
+// return values:
+//      %al : character at currkey
 _KEY:
-    mov (currkey),%ebx
-    cmp (bufftop),%ebx
-    jge 1f                  // exhausted the input buffer?
-    xor %eax,%eax
-    mov (%ebx),%al          // get next key from input buffer
-    inc %ebx
-    mov %ebx,(currkey)      // increment currkey
-    ret
+    IF_AE (currkey), (bufftop), 1f // if currkey >= bufftop, then exhausted the input buffer
+        get_inc_currkey
+        ret
+    1:      // Out of input; use read(2) to fetch more input from stdin.        
+        movl $buffer,currkey
+        
+        syscall_read $0, $buffer, $BUFFER_SIZE
 
-    1:      // Out of input; use read(2) to fetch more input from stdin.
-        xor %ebx,%ebx           // 1st param: stdin
-        mov $buffer,%ecx        // 2nd param: buffer
-        mov %ecx,currkey
-        mov $BUFFER_SIZE,%edx   // 3rd param: max length
-        mov $__NR_read,%eax     // syscall: read
-        int $0x80
-        test %eax,%eax          // If %eax <= 0, then exit.
-        jbe 2f
-        addl %eax,%ecx          // buffer+%eax = bufftop
-        mov %ecx,bufftop
-        jmp _KEY
-
-    2:      // Error or end of input: exit the program.
-        xor %ebx,%ebx
-        mov $__NR_exit,%eax     // syscall: exit
-        int $0x80
+        // test %eax,%eax          // If %eax <= 0, then exit.
+        // jbe 2f
+        // IF_LE %eax, $0, 2f
+        IF_LE %eax, 0, 2f
+            addl %eax,%ecx          // buffer+%eax = bufftop
+            mov %ecx,bufftop
+            jmp _KEY
+        2:      // Error or end of input: exit the program.
+            xor %ebx,%ebx
+            mov $__NR_exit,%eax     // syscall: exit
+            int $0x80
 // end _KEY
 
 .data
@@ -362,34 +418,34 @@ _NUMBER:
         movb (%edi),%bl         // %bl = next character in string
         inc %edi
 
-            // Convert 0-9, A-Z to a number 0-35.
-    2:      
-        subb $'0',%bl           // < '0'?
-        jb 4f
-        cmp $10,%bl             // <= '9'?
-        jb 3f
-        subb $17,%bl            // < 'A'? (17 is 'A'-'0')
-        jb 4f
-        addb $10,%bl
+        // Convert 0-9, A-Z to a number 0-35.
+        2:      
+            subb $'0',%bl           // < '0'?
+            jb 4f
+            cmp $10,%bl             // <= '9'?
+            jb 3f
+            subb $17,%bl            // < 'A'? (17 is 'A'-'0')
+            jb 4f
+            addb $10,%bl
 
-    3:      
-        cmp %dl,%bl             // >= BASE?
-        jge 4f
+        3:      
+            cmp %dl,%bl             // >= BASE?
+            jge 4f
 
-        // OK, so add it to %eax and loop.
-        add %ebx,%eax
-        dec %ecx
-        jnz 1b
+            // OK, so add it to %eax and loop.
+            add %ebx,%eax
+            dec %ecx
+            jnz 1b
 
-            // Negate the result if first character was '-' (saved on the stack).
-    4:      
-        pop %ebx
-        test %ebx,%ebx
-        jz 5f
-        neg %eax
+                // Negate the result if first character was '-' (saved on the stack).
+        4:      
+            pop %ebx
+            test %ebx,%ebx
+            jz 5f
+            neg %eax
 
-    5:      
-        ret
+        5:      
+            ret
 // end _NUMBER
 // ------------------------------------------------------------------------
 
@@ -583,78 +639,86 @@ defword "QUIT",4,,QUIT
     .int INTERPRET          // interpret the next word
     .int BRANCH,-8          // and loop (indefinitely)
 
+// ----------------------------------------------------------------------
+// Helper macros for INTERPRET
+
+// execute expects:
+//     eax=xt (or LIT)
+//     ebx=literal if interpret_is_lit!=0
+.macro execute // Executing - run it!
+    IF_MEM_NOT_ZERO interpret_is_lit, .L_execute_literal_\@
+        // Not a literal, execute it now.  This never returns, but the codeword will
+        // eventually call NEXT which will reenter the loop in QUIT.
+        jmp *(%eax)
+    .L_execute_literal_\@: // Executing a literal, which means push it on the stack.
+        push %ebx    // push literal on stack
+        NEXT
+.endm
+
+// check_state is terminal:
+//     always ends in NEXT or tail-jumps via execute
+.macro check_state // 2:
+    // Are we compiling or executing?        
+    IF_MEM_ZERO var_STATE, 40f
+
+        // Compiling - just append the word to the current dictionary definition.
+        call _COMMA
+
+        IF_MEM_ZERO interpret_is_lit, 3f
+            mov %ebx,%eax           // Yes, so LIT is followed by a number.
+            call _COMMA
+        3:
+            NEXT
+    40:
+        execute
+.endm
+
 defcode "INTERPRET",9,,INTERPRET
     call _WORD              // Returns %ecx = length, %edi = pointer to word.
 
     // Is it in the dictionary?
     movl $0, interpret_is_lit // Not a literal number (not yet anyway ...)
     call _FIND                 // Returns %eax = pointer to header or 0 if not found.
-    IF %eax, .L_found, .L_not_found
-    .L_found:        
+    IF_ZERO %eax, .L_not_found
         // In the dictionary.  Is it an IMMEDIATE codeword?
         mov %eax,%edi           // %edi = dictionary entry
         movb 4(%edi),%bl        // Get name+flags.
         call _TCFA              // Convert dictionary entry (in %edi) to codeword pointer.
         mov %edi,%eax
 
-        IF_FLAG $F_IMMED, %bl, 4f, 2f
-        
+        IF_FLAG_ELSE $F_IMMED, %bl, 10f, 20f
+        10:
+            execute
+        20:
+            check_state        
+
     .L_not_found:
         // Not in the dictionary (not a word) so assume it's a literal number.
         incl interpret_is_lit
         call _NUMBER            // Returns the parsed number in %eax, %ecx > 0 if error                
         IF_NOT_ZERO %ecx, .L_parse_error        
-        mov %eax,%ebx
-        mov $LIT,%eax           // The word is LIT
+            mov %eax,%ebx
+            mov $LIT,%eax           // The word is LIT
+            check_state            
+        .L_parse_error:
+            // Parse error (not a known word or a number in the current BASE).
+            // Print an error message followed by up to 40 characters of context.
+        
+            syscall_write $2, $errmsg, $errmsgend-errmsg
 
-    2:      
-        // Are we compiling or executing?        
-        IF_MEM_ZERO var_STATE, 4f
-
-            // Compiling - just append the word to the current dictionary definition.
-            call _COMMA
-    
-            IF_MEM_ZERO interpret_is_lit, 3f
-                mov %ebx,%eax           // Yes, so LIT is followed by a number.
-                call _COMMA
-            3:
-                NEXT
-
-    4:  // Executing - run it!
-        // mov interpret_is_lit,%ecx // Literal?
-        IF_MEM_NOT_ZERO interpret_is_lit, 5f
-            // Not a literal, execute it now.  This never returns, but the codeword will
-            // eventually call NEXT which will reenter the loop in QUIT.
-            jmp *(%eax)
-        5:  // Executing a literal, which means push it on the stack.
-            push %ebx    // push literal on stack
-            NEXT
-
-    .L_parse_error:
-        // Parse error (not a known word or a number in the current BASE).
-        // Print an error message followed by up to 40 characters of context.
-    
-        syscall_write $2, $errmsg, $errmsgend-errmsg
-
-        mov (currkey),%ecx      // the error occurred just before currkey position
-        mov %ecx,%edx
-        sub $buffer,%edx        // %edx = currkey - buffer (length in buffer before currkey)
-        cmp $40,%edx            // if > 40, then print only 40 characters
-        jle 7f
-            mov $40,%edx
-        7:      
-            sub %edx,%ecx           // %ecx = start of area to print, %edx = length
-            mov $__NR_write,%eax    // write syscall
-            int $0x80
-
-            mov $errmsgnl,%ecx      // newline
-            mov $1,%edx
-            mov $__NR_write,%eax    // write syscall
-            int $0x80
+            mov (currkey),%ecx      // the error occurred just before currkey position
+            mov %ecx,%edx
+            sub $buffer,%edx        // %edx = currkey - buffer (length in buffer before currkey)
+            cmp $40,%edx; jle 7f    // if > 40, then print only 40 characters
+                mov $40,%edx
+            7:      
+                sub %edx,%ecx           // %ecx = start of area to print, %edx = length
+                syscall_write $2, %ecx,      %edx
+                syscall_write $2, $errmsgnl, $1 // newline
 
 NEXT
 
-    .section .rodata
+.section .rodata
 errmsg: .ascii "PARSE ERROR: "
 errmsgend:
 errmsgnl: .ascii "\n"
