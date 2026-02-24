@@ -18,8 +18,8 @@
 .endm
 
 // -----------------------------------------------------------------------
-// Conditional macros
-// -----------------------------------------------------------------------
+#region Conditional macros
+
 .macro IF_NOT_ZERO reg, label
     test \reg, \reg
     jnz \label
@@ -61,9 +61,16 @@
     cmpl $0, \mem
     jz \label
 .endm
+#endregion
 // -----------------------------------------------------------------------
 //#include <asm-i386/unistd.h>  // you might need this instead
 #include <asm/unistd.h>
+
+.macro syscall_1 nr, a1
+    mov \a1, %ebx
+    mov \nr, %eax
+    int $0x80
+.endm
 
 .macro syscall_3 nr, a1, a2, a3
     mov \a1, %ebx
@@ -73,13 +80,26 @@
     int $0x80
 .endm
 
-.macro syscall_read fd, buf, len
+// .macro syscall_read fd, buf, len
+//     syscall_3 $__NR_read, \fd, \buf, \len
+// .endm
+
+.macro syscall_read fd, buf, len, out=
     syscall_3 $__NR_read, \fd, \buf, \len
+    .ifnb \out
+        movl %eax, \out
+    .endif
 .endm
+
 
 .macro syscall_write fd, buf, len
     syscall_3 $__NR_write, \fd, \buf, \len
 .endm
+
+.macro syscall_exit status
+    syscall_1 $__NR_exit, \status
+.endm
+
 // -----------------------------------------------------------------------
 
 /* DOCOL - the interpreter! */
@@ -189,8 +209,7 @@ defconst "O_APPEND"  , 8,,__O_APPEND,02000
 defconst "O_NONBLOCK",10,,__O_NONBLOCK,04000
 
 // -----------------------------------------------------------------------
-// RETURN STACK
-// -----------------------------------------------------------------------
+#region RETURN STACK
 
 defcode ">R",2,,TOR
     pop %eax                // pop parameter stack into %eax
@@ -214,6 +233,7 @@ defcode "RDROP",5,,RDROP
     addl $4,%ebp            // pop return stack and throw away
 NEXT
 
+#endregion
 // ----------------------------------------------------------------------
 // PARAMETER (DATA) STACK
 // ----------------------------------------------------------------------
@@ -278,7 +298,30 @@ NEXT
     incl currkey
 .endm
 
+.macro add2 result, op1, op2
+    movl \op1, \result
+    addl \op2, \result
+.endm
+
+.macro add2_any result, op1, op2
+    push %eax
+        movl \op1, %eax
+        addl \op2, %eax
+        movl %eax, \result
+    pop %eax
+.endm
+
+.macro sub2_any result, op1, op2
+    push %eax
+        movl \op1, %eax
+        subl \op2, %eax
+        movl %eax, \result
+    pop %eax
+.endm
+
+
 // ----------------------------------------------------------------------
+#region KEY
 defcode "KEY",3,,KEY
     call _KEY
     push %eax               // push return value on stack
@@ -290,31 +333,31 @@ _KEY:
     IF_AE (currkey), (bufftop), 1f // if currkey >= bufftop, then exhausted the input buffer
         get_inc_currkey
         ret
-    1:      // Out of input; use read(2) to fetch more input from stdin.        
-        movl $buffer,currkey
+    1:  // Out of input; use read(2) to fetch more input from stdin.        
+        movl $buffer,currkey        
         
-        syscall_read $0, $buffer, $BUFFER_SIZE
+        syscall_read $0, $buffer, $BUFFER_SIZE, out=n_bytes_read
 
-        // test %eax,%eax          // If %eax <= 0, then exit.
-        // jbe 2f
-        // IF_LE %eax, $0, 2f
-        IF_LE %eax, 0, 2f
-            addl %eax,%ecx          // buffer+%eax = bufftop
-            mov %ecx,bufftop
+        IF_LE n_bytes_read, $0, 2f
+            // bufftop = buffer + n_bytes_read
+            add2_any bufftop, $buffer, n_bytes_read
+
             jmp _KEY
-        2:      // Error or end of input: exit the program.
-            xor %ebx,%ebx
-            mov $__NR_exit,%eax     // syscall: exit
-            int $0x80
+        2:  // Error or end of input: exit the program.
+            syscall_exit $0
 // end _KEY
 
 .data
 .align 4
 
+n_bytes_read:
+    .int 0                  // number of bytes read by last read syscall (set by KEY)
+
 currkey: 
     .int buffer             // Current place in input buffer (next character to read).
 bufftop: 
     .int buffer             // Last valid data in input buffer + 1.
+#endregion
 // ------------------------------------------------------------------------
 defcode "EMIT",4,,EMIT
     pop %eax
@@ -322,57 +365,89 @@ defcode "EMIT",4,,EMIT
 NEXT
 
 _EMIT:
-    mov $1,%ebx             // 1st param: stdout
-
-    // write needs the address of the byte to write
     mov %al,emit_scratch
-    mov $emit_scratch,%ecx  // 2nd param: address
-
-    mov $1,%edx             // 3rd param: nbytes = 1
-
-    mov $__NR_write,%eax    // write syscall
-    int $0x80
+    syscall_write $1, $emit_scratch, $1
 ret
 
 .data                   // NB: easier to fit in the .data section
 emit_scratch:
     .space 1                // scratch used by EMIT
 // ------------------------------------------------------------------------
+#region WORD
 defcode "WORD",4,,WORD
     call _WORD
     push %edi               // push base address
     push %ecx               // push length
 NEXT
 
-_WORD:
-    /* Search for first non-blank character.  Also skip \ comments. */
-    1:
-        call _KEY               // get next key, returned in %eax
-        cmpb $'\\',%al          // start of a comment?
-        je 3f                   // if so, skip the comment
-        cmpb $' ',%al
-        jbe 1b                  // if so, keep looking
 
-        /* Search for the end of the word, storing chars as we go. */
-        mov $word_buffer,%edi   // pointer to return buffer
-    2:
-        stosb           // add character to return buffer
-        call _KEY       // get next key, returned in %al
-        cmpb $' ',%al   // is blank?
-        ja 2b           // if not, keep looping
+// .macro skip_to_newline
+//     3:
+//         call _KEY
+//         cmpb $'\n',%al; jne 3b          // end of line yet?
+// .endm
 
-        /* Return the word (well, the static buffer) and length. */
-        sub $word_buffer,%edi
-        mov %edi,%ecx           // return length of the word
-        mov $word_buffer,%edi   // return address of the word
-        ret
-
-        /* Code to skip \ comments to end of the current line. */
-    3:
+.macro skip_to_newline
+    .L_loop_\@:
         call _KEY
-        cmpb $'\n',%al          // end of line yet?
-        jne 3b
-        jmp 1b
+        cmpb $'\n',%al
+        jne .L_loop_\@          // end of line yet?
+.endm
+
+.macro IF_ABOVE_BYTE op1, op2, label
+    cmpb \op2, \op1
+    ja \label
+.endm
+
+.macro IS_NON_BLANK op, label
+    IF_ABOVE_BYTE \op, $' ', \label
+.endm
+
+.macro skip_to_non_blank
+    1:
+        IS_NON_BLANK %al, 2f
+            call _KEY
+            jmp 1b
+    2:
+.endm
+
+.macro IF_NOT_EQ_BYTE op1, op2, label
+    cmpb \op2, \op1
+    jne \label
+.endm
+
+.macro IS_NOT_COMMENT op, label
+    IF_NOT_EQ_BYTE \op, $'\\' , \label
+.endm
+
+.macro check_for_comment
+    IS_NOT_COMMENT %al, 1f
+        skip_to_newline
+        jmp _WORD
+    1:    
+.endm
+
+.macro get_word
+    2:
+        stosb                       // add character to return buffer
+        call _KEY                   // get next key, returned in %al
+        IF_ABOVE_BYTE %al, $' ', 2b // if not blank, keep looping
+.endm
+
+_WORD:
+    call _KEY               // get next key, returned in %eax
+    skip_to_non_blank
+    check_for_comment
+
+    /* Search for the end of the word, storing chars as we go. */
+    mov $word_buffer,%edi   // pointer to return buffer
+    get_word
+
+    /* Return the word (well, the static buffer) and length. */
+    // %ecx = %edi - word_buffer    length of the word
+    sub2_any %ecx, %edi, $word_buffer
+    mov $word_buffer,%edi   // return address of the word
+    ret
 // end _WORD
 
 .data                   // NB: easier to fit in the .data section
@@ -380,6 +455,7 @@ _WORD:
 // overwrite this buffer.  Maximum word length is 32 chars.
 word_buffer:
     .space 32
+#endregion
 // ------------------------------------------------------------------------
 defcode "NUMBER",6,,NUMBER
     pop %ecx                // length of string
@@ -788,6 +864,8 @@ cold_start:                     // High-level code without a codeword.
 // FORTH primitives defined in assembly follow.
 // Nothing above here depends on these.
 
+#region FORTH primitives defined in assembly
+
 // ----------------------------------------------------------------------
 // STACK MANIPULATION 
 // ----------------------------------------------------------------------
@@ -1054,8 +1132,7 @@ defcode "LIT",3,,LIT
 NEXT
 
 // ----------------------------------------------------------------------
-// MEMORY
-// ----------------------------------------------------------------------
+#region MEMORY
 
 defcode "!",1,,STORE
     pop %ebx            // address to store at
@@ -1115,9 +1192,9 @@ defcode "CMOVE",5,,CMOVE
     mov %edx,%esi           // restore %esi
 NEXT
 
+#endregion
 // ----------------------------------------------------------------------
-// SYSTEM CALLS
-// ----------------------------------------------------------------------
+#region SYSTEM CALLS
 
 defcode "SYSCALL3",8,,SYSCALL3
     pop %eax                // System call number (see <asm/unistd.h>)
@@ -1148,5 +1225,10 @@ defcode "SYSCALL0",8,,SYSCALL0
     int $0x80
     push %eax               // Result (negative for -errno)
 NEXT
+
+#endregion
+// ----------------------------------------------------------------------
+
+#endregion
 
 /* END OF jonesforth.S */
