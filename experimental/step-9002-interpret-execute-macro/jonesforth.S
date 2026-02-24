@@ -61,6 +61,16 @@
     cmpl $0, \mem
     jz \label
 .endm
+
+.macro IF_ABOVE_BYTE op1, op2, label
+    cmpb \op2, \op1
+    ja \label
+.endm
+
+.macro IF_NOT_EQ_BYTE op1, op2, label
+    cmpb \op2, \op1
+    jne \label
+.endm
 #endregion
 // -----------------------------------------------------------------------
 //#include <asm-i386/unistd.h>  // you might need this instead
@@ -380,23 +390,12 @@ defcode "WORD",4,,WORD
     push %ecx               // push length
 NEXT
 
-
-// .macro skip_to_newline
-//     3:
-//         call _KEY
-//         cmpb $'\n',%al; jne 3b          // end of line yet?
-// .endm
-
+#region Helper macros for _WORD
 .macro skip_to_newline
-    .L_loop_\@:
+    .L\@:
         call _KEY
         cmpb $'\n',%al
-        jne .L_loop_\@          // end of line yet?
-.endm
-
-.macro IF_ABOVE_BYTE op1, op2, label
-    cmpb \op2, \op1
-    ja \label
+        jne .L\@          // end of line yet?
 .endm
 
 .macro IS_NON_BLANK op, label
@@ -409,11 +408,6 @@ NEXT
             call _KEY
             jmp 1b
     2:
-.endm
-
-.macro IF_NOT_EQ_BYTE op1, op2, label
-    cmpb \op2, \op1
-    jne \label
 .endm
 
 .macro IS_NOT_COMMENT op, label
@@ -433,17 +427,18 @@ NEXT
         call _KEY                   // get next key, returned in %al
         IF_ABOVE_BYTE %al, $' ', 2b // if not blank, keep looping
 .endm
+#endregion
 
 _WORD:
     call _KEY               // get next key, returned in %eax
     skip_to_non_blank
     check_for_comment
 
-    /* Search for the end of the word, storing chars as we go. */
+    // Search for the end of the word, storing chars as we go.
     mov $word_buffer,%edi   // pointer to return buffer
     get_word
 
-    /* Return the word (well, the static buffer) and length. */
+    // Return the word (well, the static buffer) and length.
     // %ecx = %edi - word_buffer    length of the word
     sub2_any %ecx, %edi, $word_buffer
     mov $word_buffer,%edi   // return address of the word
