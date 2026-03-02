@@ -187,11 +187,11 @@ NEXT
         .int \initial
 .endm
 
-defvar "STATE",5,,STATE
+defvar "STATE",5,,STATE // STATE == 0 : executing    STATE != 0 : compiling
 defvar "HERE",4,,HERE
 defvar "LATEST",6,,LATEST,name_SYSCALL0 // SYSCALL0 must be last in built-in dictionary
 defvar "S0",2,,SZ
-defvar "BASE",4,,BASE,10
+
 #endregion
 // -----------------------------------------------------------------------
 #region constants
@@ -378,6 +378,7 @@ bufftop:
     .int buffer             // Last valid data in input buffer + 1.
 #endregion
 // ------------------------------------------------------------------------
+#region EMIT
 defcode "EMIT",4,,EMIT
     pop %eax
     call _EMIT
@@ -391,6 +392,7 @@ ret
 .data                   // NB: easier to fit in the .data section
 emit_scratch:
     .space 1                // scratch used by EMIT
+#endregion
 // ------------------------------------------------------------------------
 #region WORD
 defcode "WORD",4,,WORD
@@ -462,6 +464,9 @@ word_buffer:
 #endregion
 // ------------------------------------------------------------------------
 #region NUMBER
+
+defvar "BASE",4,,BASE,10
+
 defcode "NUMBER",6,,NUMBER
     pop %ecx                // length of string
     pop %edi                // start address of string
@@ -725,10 +730,6 @@ defword "HIDE",4,,HIDE
     .int HIDDEN             // Set F_HIDDEN flag.
 .int EXIT               // Return.
 
-defcode "'",1,,TICK
-    lodsl                   // Get the address of the next word and skip it.
-    pushl %eax              // Push it on the stack.
-NEXT
 
 defcode "BRANCH",6,,BRANCH
     add (%esi),%esi         // add the offset to the instruction pointer
@@ -742,22 +743,7 @@ defcode "0BRANCH",7,,ZBRANCH
 NEXT
 
 
-defcode "LITSTRING",9,,LITSTRING
-    lodsl                   // get the length of the string
-    push %esi               // push the address of the start of the string
-    push %eax               // push it on the stack
-    addl %eax,%esi          // skip past the string
-    addl $3,%esi            // but round up to next 4 byte boundary
-    andl $~3,%esi
-NEXT
 
-defcode "TELL",4,,TELL
-    mov $1,%ebx             // 1st param: stdout
-    pop %edx                // 3rd param: length of string
-    pop %ecx                // 2nd param: address of string
-    mov $__NR_write,%eax    // write syscall
-    int $0x80
-NEXT
 
 // QUIT must not return (ie. must not call EXIT).
 defword "QUIT",4,,QUIT
@@ -858,12 +844,6 @@ interpret_is_lit:
     .int 0                  // Flag used to record if reading a literal
 #endregion
 // -----------------------------------------------------------------------
-defcode "CHAR",4,,CHAR
-    call _WORD              // Returns %ecx = length, %edi = pointer to word.
-    xor %eax,%eax
-    movb (%edi),%al         // Get the first character of the word.
-    push %eax               // Push it onto the stack.
-NEXT
 
 defcode "EXECUTE",7,,EXECUTE
     pop %eax                // Get xt into %eax
@@ -1182,6 +1162,36 @@ defcode "LIT",3,,LIT
     lodsl
     push %eax               // push the literal number on to stack
 NEXT
+
+defcode "TELL",4,,TELL
+    mov $1,%ebx             // 1st param: stdout
+    pop %edx                // 3rd param: length of string
+    pop %ecx                // 2nd param: address of string
+    mov $__NR_write,%eax    // write syscall
+    int $0x80
+NEXT
+
+defcode "CHAR",4,,CHAR
+    call _WORD              // Returns %ecx = length, %edi = pointer to word.
+    xor %eax,%eax
+    movb (%edi),%al         // Get the first character of the word.
+    push %eax               // Push it onto the stack.
+NEXT
+
+defcode "LITSTRING",9,,LITSTRING
+    lodsl                   // get the length of the string
+    push %esi               // push the address of the start of the string
+    push %eax               // push it on the stack
+    addl %eax,%esi          // skip past the string
+    addl $3,%esi            // but round up to next 4 byte boundary
+    andl $~3,%esi
+NEXT
+
+defcode "'",1,,TICK
+    lodsl                   // Get the address of the next word and skip it.
+    pushl %eax              // Push it on the stack.
+NEXT
+
 
 // ----------------------------------------------------------------------
 #region MEMORY

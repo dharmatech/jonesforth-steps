@@ -12,18 +12,18 @@ define trace-loop
         # printf "pc=%#x eax=%#x\n", $pc, $eax
         # ui-reg pc
         x/i $pc
-        ui-reg eax
-        ui-reg ebx
-        ui-reg esi
-        echo edi \ 
-        x/4dw $edi
-        ui-mem &currkey
-        ui-mem &bufftop
-        ui-buffer
-        echo &return_stack     \ 
-        x/3xw &return_stack
-        echo &return_stack_top \ 
-        x/3xw &return_stack_top
+        # ui-reg eax
+        # ui-reg ebx
+        # ui-reg esi
+        # echo edi \ 
+        # x/4dw $edi
+        # ui-mem &currkey
+        # ui-mem &bufftop
+        # ui-buffer
+        # echo &return_stack     \ 
+        # x/3xw &return_stack
+        # echo &return_stack_top \ 
+        # x/3xw &return_stack_top
         echo --------------------------------------------------\n
     end
 end
