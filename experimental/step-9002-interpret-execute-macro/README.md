@@ -12,7 +12,8 @@ This has been tested on Ubuntu 22.04.5 in WSL on Windows 11.
 On Ubuntu 22.04.5, the following are needed:
 
 ```
-sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
+sudo apt-get update
+sudo apt-get install -y gcc-multilib g++-multilib
 ```
 
 # Build

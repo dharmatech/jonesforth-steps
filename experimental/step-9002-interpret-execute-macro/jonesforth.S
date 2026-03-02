@@ -25,6 +25,11 @@
     jnz \label
 .endm
 
+// .macro IF_NOT_ZERO_BYTE reg, label
+//     test \reg, \reg
+//     jnz \label
+// .endm
+
 .macro IF_ZERO reg, label
     test \reg, \reg
     jz \label
@@ -73,8 +78,9 @@
 .endm
 #endregion
 // -----------------------------------------------------------------------
+#region system calls
 //#include <asm-i386/unistd.h>  // you might need this instead
-#include <asm/unistd.h>
+#include <asm/unistd.h> // sudo apt-get install -y gcc-multilib g++-multilib
 
 .macro syscall_1 nr, a1
     mov \a1, %ebx
@@ -109,7 +115,7 @@
 .macro syscall_exit status
     syscall_1 $__NR_exit, \status
 .endm
-
+#endregion
 // -----------------------------------------------------------------------
 
 /* DOCOL - the interpreter! */
@@ -122,9 +128,9 @@ DOCOL:
 NEXT
 
 /* Flags - these are discussed later. */
-.set F_IMMED,0x80
-.set F_HIDDEN,0x20
-.set F_LENMASK,0x1f     // length mask
+.set F_IMMED,  0x80     //                0b10000000
+.set F_HIDDEN, 0x20     //                0b00100000
+.set F_LENMASK,0x1f     // length mask    0b00011111
 
 // Store the chain of links.
 .set link,0
@@ -168,7 +174,8 @@ NEXT
         .globl code_\label
         code_\label :                   // assembler code follows
 .endm
-
+// -----------------------------------------------------------------------
+#region variables
 .macro defvar name, namelen, flags=0, label, initial=0
     defcode \name,\namelen,\flags,\label
         push $var_\name
@@ -185,8 +192,9 @@ defvar "HERE",4,,HERE
 defvar "LATEST",6,,LATEST,name_SYSCALL0 // SYSCALL0 must be last in built-in dictionary
 defvar "S0",2,,SZ
 defvar "BASE",4,,BASE,10
-
-
+#endregion
+// -----------------------------------------------------------------------
+#region constants
 
 .macro defconst name, namelen, flags=0, label, value
     defcode \name,\namelen,\flags,\label
@@ -218,6 +226,7 @@ defconst "O_TRUNC"   , 7,,__O_TRUNC,01000
 defconst "O_APPEND"  , 8,,__O_APPEND,02000
 defconst "O_NONBLOCK",10,,__O_NONBLOCK,04000
 
+#endregion
 // -----------------------------------------------------------------------
 #region RETURN STACK
 
@@ -452,6 +461,7 @@ word_buffer:
     .space 32
 #endregion
 // ------------------------------------------------------------------------
+#region NUMBER
 defcode "NUMBER",6,,NUMBER
     pop %ecx                // length of string
     pop %edi                // start address of string
@@ -473,15 +483,14 @@ _NUMBER:
     movb (%edi),%bl         // %bl = first character in string
     inc %edi
     push %eax               // push 0 on stack
-    cmpb $'-',%bl           // negative number?
-    jnz 2f
+    cmpb $'-',%bl; jnz 2f   // negative number?
+   
     pop %eax
     push %ebx               // push <> 0 on stack, indicating negative
-    dec %ecx
-    jnz 1f
-    pop %ebx                // error: string is only '-'.
-    movl $1,%ecx
-    ret
+    dec %ecx; jnz 1f
+        pop %ebx                // error: string is only '-'.
+        movl $1,%ecx
+        ret
 
     // Loop reading digits.
     1:      
@@ -518,7 +527,9 @@ _NUMBER:
         5:      
             ret
 // end _NUMBER
+#endregion
 // ------------------------------------------------------------------------
+#region FIND ( len addr -- addr )
 
 defcode "FIND",4,,FIND
     pop %ecx                // %ecx = length
@@ -527,54 +538,97 @@ defcode "FIND",4,,FIND
     push %eax               // %eax = address of dictionary entry (or NULL)
 NEXT
 
-_FIND:
-    push %esi               // Save %esi so we can use it in string comparison.
+//    <--- DICTIONARY ENTRY (HEADER) ----------------------->
+//    +------------------------+--------+---------- - - - - +----------- - - - -
+//    | LINK POINTER           | LENGTH/| NAME              | DEFINITION
+//    |                        | FLAGS  |                   |
+//    +--- (4 bytes) ----------+- byte -+- n bytes  - - - - +----------- - - - -
 
-    // Now we start searching backwards through the dictionary for this word.
-    mov var_LATEST,%edx     // LATEST points to name header of the latest word in the dictionary
-    1:     
-        test %edx,%edx          // NULL pointer?  (end of the linked list)
-        je 4f
+.equiv R_CURRENT_HEADER, %edx // Address of dictionary entry header
 
-        // Compare the length expected and the length of the word.
-        // Note that if the F_HIDDEN flag is set on the word, then by a bit of trickery
-        // this won't pick the word (the length will appear to be wrong).
-        xor %eax,%eax
-        movb 4(%edx),%al        // %al = flags+length field
-        andb $(F_HIDDEN|F_LENMASK),%al // %al = name length
-        cmpb %cl,%al            // Length is the same?
-        jne 2f
+.equiv O_LINK,         0
+.equiv O_LENGTH_FLAGS, 4
+.equiv O_NAME,         5
 
-        // Compare the strings in detail.
-        push %ecx               // Save the length
-        push %edi               // Save the address (repe cmpsb will move this pointer)
-        lea 5(%edx),%esi        // Dictionary string we are checking against.
-        repe cmpsb              // Compare the strings.
-        pop %edi
-        pop %ecx
-        jne 2f                  // Not the same.
+#region Helper macros for _FIND
 
-        // The strings are the same - return the header pointer in %eax
-        pop %esi
-        mov %edx,%eax
-        ret
-
-    2:      
-        mov (%edx),%edx         // Move back through the link field to the previous word
-        jmp 1b                  // .. and loop.
-
-    4:      
+.macro check_not_found
+    IF_NOT_ZERO R_CURRENT_HEADER, 10f
         // Not found.
         pop %esi
         xor %eax,%eax           // Return zero to indicate not found.
-        ret
+        ret        
+    10:
+.endm
+
+.macro loop_continue_if_hidden label
+    movb O_LENGTH_FLAGS(R_CURRENT_HEADER), %al
+    andb $F_HIDDEN, %al
+    IF_NOT_ZERO %al, \label
+.endm
+
+.macro get_length_field
+    xor %eax,%eax
+    movb O_LENGTH_FLAGS(R_CURRENT_HEADER), %al // %al = flags+length field
+    andb $F_LENMASK,%al            // %al = length
+.endm
+
+.macro loop_continue_if_length_mismatch label
+    get_length_field
+    IF_NOT_EQ_BYTE %al, %cl, \label
+.endm
+
+.macro compare_strings
+    // Compare the strings in detail.
+    push %ecx                   // Save the length
+        push %edi               // Save the address (repe cmpsb will move this pointer)
+            lea O_NAME(R_CURRENT_HEADER),%esi    // Dictionary string we are checking against.
+            repe cmpsb          // Compare the strings. Modifies %esi, %edi and %ecx.
+                                // Advances %esi and %edi. Decrements %ecx until zero or mismatch.
+        pop %edi
+    pop %ecx
+.endm
+
+.macro loop_continue_if_string_mismatch label
+    compare_strings
+    jne \label
+.endm
+
+#endregion
+
+// %ecx = length  of word name
+// %edi = address of word name string
+
+_FIND:
+    push %esi               // Save %esi so we can use it in string comparison.
+    
+    mov var_LATEST, R_CURRENT_HEADER
+    1:     
+        check_not_found
+        loop_continue_if_hidden 2f
+        loop_continue_if_length_mismatch 2f
+        loop_continue_if_string_mismatch 2f
+
+            // The strings are the same - return the header pointer in %eax
+            pop %esi
+            mov %edx,%eax
+            ret
+
+        2:      
+            // Move back through the link field to the previous word
+            mov O_LINK(R_CURRENT_HEADER),R_CURRENT_HEADER         
+            jmp 1b                  // .. and loop.
+
 // end _FIND
+#endregion
 // ----------------------------------------------------------------------
+#region >CFA ( addr -- cfa )
 defcode ">CFA",4,,TCFA
     pop %edi
     call _TCFA
     push %edi
 NEXT
+
 _TCFA:
     xor %eax,%eax
     add $4,%edi             // Skip link pointer.
@@ -585,12 +639,13 @@ _TCFA:
     addl $3,%edi            // The codeword is 4-byte aligned.
     andl $~3,%edi
     ret
-
+#endregion
+// ----------------------------------------------------------------------
 defword ">DFA",4,,TDFA
     .int TCFA               // >CFA         (get code field address)
     .int INCR4              // 4+           (add 4 to it to get to next word)
     .int EXIT               // EXIT         (return from FORTH word)
-
+// ----------------------------------------------------------------------
 defcode "CREATE",6,,CREATE
 
     // Get the name length and address.
@@ -711,7 +766,9 @@ defword "QUIT",4,,QUIT
     .int BRANCH,-8          // and loop (indefinitely)
 
 // ----------------------------------------------------------------------
-// Helper macros for INTERPRET
+#region INTERPRET
+
+#region Helper macros for INTERPRET
 
 // execute expects:
 //     eax=xt (or LIT)
@@ -730,7 +787,7 @@ defword "QUIT",4,,QUIT
 //     always ends in NEXT or tail-jumps via execute
 .macro check_state // 2:
     // Are we compiling or executing?        
-    IF_MEM_ZERO var_STATE, 40f
+    IF_MEM_ZERO var_STATE, 40f // STATE == 0 : executing    STATE != 0 : compiling
 
         // Compiling - just append the word to the current dictionary definition.
         call _COMMA
@@ -743,6 +800,7 @@ defword "QUIT",4,,QUIT
     40:
         execute
 .endm
+#endregion
 
 defcode "INTERPRET",9,,INTERPRET
     call _WORD              // Returns %ecx = length, %edi = pointer to word.
@@ -798,6 +856,7 @@ errmsgnl: .ascii "\n"
 .align 4
 interpret_is_lit:
     .int 0                  // Flag used to record if reading a literal
+#endregion
 // -----------------------------------------------------------------------
 defcode "CHAR",4,,CHAR
     call _WORD              // Returns %ecx = length, %edi = pointer to word.
@@ -856,10 +915,8 @@ NEXT                        // Run interpreter!
 cold_start:                     // High-level code without a codeword.
     .int QUIT
 // ----------------------------------------------------------------------
-// FORTH primitives defined in assembly follow.
-// Nothing above here depends on these.
-
 #region FORTH primitives defined in assembly
+// Nothing above here depends on these.
 
 // ----------------------------------------------------------------------
 // STACK MANIPULATION 
@@ -1225,5 +1282,5 @@ NEXT
 // ----------------------------------------------------------------------
 
 #endregion
-
+// ----------------------------------------------------------------------
 /* END OF jonesforth.S */
