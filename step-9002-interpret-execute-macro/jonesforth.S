@@ -365,6 +365,7 @@ _KEY:
         2:  // Error or end of input: exit the program.
             syscall_exit $0
 // end _KEY
+_KEY_end:
 
 .data
 .align 4
@@ -531,6 +532,7 @@ _NUMBER:
 
         5:      
             ret
+_NUMBER_end:
 // end _NUMBER
 #endregion
 // ------------------------------------------------------------------------
@@ -624,6 +626,7 @@ _FIND:
             mov O_LINK(R_CURRENT_HEADER),R_CURRENT_HEADER         
             jmp 1b                  // .. and loop.
 
+_FIND_end:
 // end _FIND
 #endregion
 // ----------------------------------------------------------------------

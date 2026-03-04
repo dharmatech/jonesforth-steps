@@ -1,0 +1,3 @@
+: __TRACE_GATE__ ;
+
+__TRACE_GATE__

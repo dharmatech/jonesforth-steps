@@ -8,8 +8,13 @@
 #   forth-view 12 8             # max_depth=12, cells_per_frame=8
 #   forth-next-cell             # step machine instructions until ESI changes, then forth-view
 #   forth-next-cell 5           # do it 5 times
+#   forth-next-known            # step until next ESI that maps to a known FORTH frame
+#   forth-next-known 3          # do it 3 times
 #   forth-until cde             # step by FORTH cells until current word is "cde"
 #   forth-until cde 5000        # same, with max_cells guard
+#   forth-until-silent cde      # fast/silent continue until entering word cde (DOCOL)
+#   forth-until-silent cde 20000 # with max DOCOL-hit guard
+#   break-interpret-word __TRACE_GATE__  # break when INTERPRET sees this exact token
 
 python
 import gdb
@@ -170,6 +175,14 @@ def _fmt_cell_label(val, dict_index):
     if sym:
         return sym
     return ""
+
+
+def _find_word_by_name(dict_index, target):
+    target_l = target.lower()
+    for rec in dict_index.entries:
+        if rec["name"].lower() == target_l:
+            return rec
+    return None
 
 
 def _safe_u32(inferior, addr):
@@ -387,6 +400,70 @@ then render forth-view. Repeats N times (default 1)."""
 ForthNextCell()
 
 
+class ForthNextKnown(gdb.Command):
+    """forth-next-known [N]
+Step machine instructions until ESI moves to a known FORTH frame address,
+then render forth-view. Repeats N times (default 1)."""
+
+    def __init__(self):
+        super(ForthNextKnown, self).__init__("forth-next-known", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        argv = gdb.string_to_argv(arg)
+        if len(argv) > 1:
+            raise gdb.GdbError("usage: forth-next-known [count]")
+        count = 1
+        if len(argv) == 1:
+            count = int(argv[0], 0)
+        if count <= 0:
+            raise gdb.GdbError("count must be > 0")
+
+        inferior = gdb.selected_inferior()
+        done = 0
+
+        while done < count:
+            start_esi = _eval_u32_or("(unsigned int)$esi", 0)
+            steps = 0
+            max_steps = 400000
+
+            while True:
+                try:
+                    gdb.execute("stepi", to_string=True)
+                except gdb.error as exc:
+                    gdb.write("forth-next-known: stepi stopped: %s\n" % exc)
+                    return
+
+                steps += 1
+                cur_esi = _eval_u32_or("(unsigned int)$esi", 0)
+                if cur_esi == start_esi:
+                    if steps >= max_steps:
+                        gdb.write(
+                            "forth-next-known: no ESI change after %d instructions\n"
+                            % max_steps
+                        )
+                        return
+                    continue
+
+                dict_index = _build_dict_index(inferior)
+                frame = dict_index.find_by_ip(cur_esi)
+                if frame is not None:
+                    done += 1
+                    break
+
+                if steps >= max_steps:
+                    gdb.write(
+                        "forth-next-known: no known frame after %d instructions\n"
+                        % max_steps
+                    )
+                    return
+
+        gdb.write("forth-next-known: stepped %d known frame(s)\n" % count)
+        gdb.execute("forth-view")
+
+
+ForthNextKnown()
+
+
 class ForthUntil(gdb.Command):
     """forth-until <word> [max_cells]
 Step by FORTH cells until the current ESI frame is in <word>, then show forth-view.
@@ -451,4 +528,152 @@ max_cells defaults to 100000."""
 
 
 ForthUntil()
+
+
+class _ForthUntilSilentBreak(gdb.Breakpoint):
+    def __init__(self, target, max_hits):
+        super(_ForthUntilSilentBreak, self).__init__("DOCOL", internal=True)
+        self.silent = True
+        self.target = target
+        self.max_hits = max_hits
+        self.hits = 0
+        self.found = False
+        self.found_name = None
+
+    def stop(self):
+        self.hits += 1
+        inferior = gdb.selected_inferior()
+        dict_index = _build_dict_index(inferior)
+        rec = _find_word_by_name(dict_index, self.target)
+
+        if rec is not None:
+            eax = _eval_u32_or("(unsigned int)$eax", 0)
+            if eax == rec["cfa"]:
+                self.found = True
+                self.found_name = rec["name"]
+                return True
+
+        if self.hits >= self.max_hits:
+            return True
+
+        return False
+
+
+class _InterpretWordBreak(gdb.Breakpoint):
+    def __init__(self, token_bytes):
+        super(_InterpretWordBreak, self).__init__(
+            "*((unsigned int)code_INTERPRET + 5)"
+        )
+        self.token = token_bytes
+        self.silent = True
+
+    def stop(self):
+        # At code_INTERPRET+5, _WORD has just returned:
+        #   ecx = token length, word_buffer = token bytes (not NUL-terminated).
+        try:
+            ecx = _eval_u32_or("(unsigned int)$ecx", 0)
+            if ecx != len(self.token):
+                return False
+            inferior = gdb.selected_inferior()
+            addr = _eval_u32_or("(unsigned int)&word_buffer", 0)
+            if addr == 0:
+                return False
+            got = inferior.read_memory(addr, ecx).tobytes()
+            return got == self.token
+        except (gdb.error, gdb.MemoryError):
+            return False
+
+
+class BreakInterpretWord(gdb.Command):
+    """break-interpret-word <token>
+Create a breakpoint that stops when INTERPRET reads exactly <token> into word_buffer."""
+
+    def __init__(self):
+        super(BreakInterpretWord, self).__init__(
+            "break-interpret-word", gdb.COMMAND_USER
+        )
+
+    def invoke(self, arg, from_tty):
+        argv = gdb.string_to_argv(arg)
+        if len(argv) != 1:
+            raise gdb.GdbError("usage: break-interpret-word <token>")
+
+        token = argv[0].encode("utf-8")
+        if len(token) == 0:
+            raise gdb.GdbError("token must not be empty")
+        if len(token) > 32:
+            raise gdb.GdbError("token too long for WORD buffer (max 32)")
+
+        bp = _InterpretWordBreak(token)
+        gdb.write(
+            "Breakpoint %d on INTERPRET token \"%s\" at %s\n"
+            % (bp.number, argv[0], bp.location)
+        )
+
+
+BreakInterpretWord()
+
+
+class ForthUntilSilent(gdb.Command):
+    """forth-until-silent <word> [max_docol_hits]
+Fast/silent continue-mode until DOCOL enters <word>, then show forth-view.
+max_docol_hits defaults to 100000."""
+
+    def __init__(self):
+        super(ForthUntilSilent, self).__init__("forth-until-silent", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        argv = gdb.string_to_argv(arg)
+        if len(argv) < 1 or len(argv) > 2:
+            raise gdb.GdbError("usage: forth-until-silent <word> [max_docol_hits]")
+
+        target = argv[0]
+        max_hits = 100000
+        if len(argv) == 2:
+            max_hits = int(argv[1], 0)
+        if max_hits <= 0:
+            raise gdb.GdbError("max_docol_hits must be > 0")
+
+        # If the user already has a visible DOCOL breakpoint, it can preempt this
+        # command's internal silent breakpoint. Temporarily disable such breakpoints.
+        disabled = []
+        for b in (gdb.breakpoints() or []):
+            try:
+                if b.enabled and b.visible and b.location in ("DOCOL", "*DOCOL"):
+                    b.enabled = False
+                    disabled.append(b)
+            except Exception:
+                pass
+
+        bp = _ForthUntilSilentBreak(target, max_hits)
+        try:
+            gdb.execute("continue")
+        except gdb.error as exc:
+            gdb.write("forth-until-silent: continue stopped: %s\n" % exc)
+        finally:
+            try:
+                bp.delete()
+            except gdb.error:
+                pass
+            for b in disabled:
+                try:
+                    b.enabled = True
+                except Exception:
+                    pass
+
+        if bp.found:
+            gdb.write(
+                "forth-until-silent: reached %s after %d DOCOL hit(s)\n"
+                % (bp.found_name, bp.hits)
+            )
+            gdb.execute("forth-view")
+            return
+
+        gdb.write(
+            "forth-until-silent: target '%s' not reached after %d DOCOL hit(s)\n"
+            % (target, bp.hits)
+        )
+
+
+ForthUntilSilent()
 end
