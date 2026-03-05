@@ -18,6 +18,10 @@ jonesforth: jonesforth.S
 run:
 	cat jonesforth.f $(PROG) - | ./jonesforth
 
+run-rlwrap:
+	@command -v rlwrap >/dev/null || (echo "rlwrap not found" && exit 1)
+	rlwrap -H ~/.jonesforth-history bash -c 'cat jonesforth.f $(PROG) - | ./jonesforth'
+
 run-exit:
 	cat jonesforth.f $(PROG) <(echo BYE) | ./jonesforth
 
@@ -152,15 +156,5 @@ $(PERF_DUPDROP_BIN): $(PERF_DUPDROP_C)
 run-perf-dupdrop: jonesforth
 	cat <(echo ': TEST-MODE ;') jonesforth.f $(PERF_DUPDROP_F) | ./jonesforth
 
-# Backward-compatible aliases.
-run_exit: run-exit
-debug_run: debug-run
-debug_run_start: debug-run-start
-debug_prog: debug-prog
-tmux_run_gdb: tmux-run-gdb
-tmux_trace_loop: tmux-trace-loop
-trace_core: trace-core
-run_perf_dupdrop: run-perf-dupdrop
-
 .SUFFIXES: .f .test
-.PHONY: test check test-pipefail check-pipefail run run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find gdb-scenario-003-interpret tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop run_exit debug_run debug_run_start debug_prog tmux_run_gdb tmux_trace_loop trace_core run_perf_dupdrop
+.PHONY: test check test-pipefail check-pipefail run run-rlwrap run-exit debug debug-run debug-run-start debug-prog gdb-scenario-000-key gdb-scenario-001-word gdb-scenario-002-find gdb-scenario-003-interpret tmux-run-gdb tmux-trace-loop trace trace-core trace-norm trace-tree trace-org run-perf-dupdrop

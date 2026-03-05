@@ -13,58 +13,56 @@ On Ubuntu 22.04.5, the following are needed:
 
 ```
 sudo apt-get update
-sudo apt-get install -y gcc-multilib g++-multilib
+sudo apt-get install -y gcc-multilib g++-multilib rlwrap
 ```
 
 # Build
 
 ```
-gcc -m32 -nostdlib -static -Wl,--build-id=none -o jonesforth jonesforth.S
+make jonesforth
 ```
 
 # Run
+
+Explicit command:
 
 ```
 cat jonesforth.f - | ./jonesforth
 ```
 
-# Run example
+Run with make:
+
+```
+make run
+```
+
+Run with rlwrap:
+
+```
+make run-rlwrap
+```
+
+# Run program
 
 ```
 cat jonesforth.f examples/add.f - | ./jonesforth
 ```
 
+```
+make run-rlwrap PROG=examples/words.f
+```
+
 # Run example and exit
 
 ```
-make run_exit PROG=examples/add.f
+make run-exit PROG=examples/add.f
 ```
 
-# Debug an example program
+# GDB
 
-```
-make debug_prog PROG=examples/add.f
-```
+See:
 
-# Trace an example program
+- [docs/gdb-example.md]()
+- [docs/gdb-example-two-terminals.md]()
+- [docs/gdb-notes.md]()
 
-```
-make trace PROG=examples/add.f
-```
-
-This writes:
-
-- `trace.md`
-- `trace.norm.md`
-
-# Makefile
-
-```
-make clean
-make 
-make run
-make run_exit PROG=examples/add.f
-make debug_prog PROG=examples/add.f
-make trace PROG=examples/add.f
-make test
-```
