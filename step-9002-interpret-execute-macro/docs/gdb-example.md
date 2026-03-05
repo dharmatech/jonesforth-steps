@@ -16,3 +16,7 @@ gdb -q ./jonesforth \
   -ex 'delete 1' \
   -ex 'forth-until-silent cde'
 ```
+
+Video demo:
+
+https://youtu.be/E6OgXMJPd9U?si=Q69qy1Y1hsS-2QBt
